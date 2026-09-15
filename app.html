@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STREAMPULSE // 80s Real-Time Data Reliability & Containment Console</title>
+  <meta name="description" content="Nostalgic 80s pastel terminal control console for StreamPulse data reliability, quarantine, Kafka streams, Spark Structured Streaming, and eBPF telemetry engine.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="styles/terminal-base.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/pipeline-dag.css">
+  <link rel="stylesheet" href="styles/subsystems.css">
+</head>
+<body class="crt-flicker">
+
+  <!-- CRT Scanlines & Vignette Overlays (pointer-events: none) -->
+  <div class="crt-scanlines" aria-hidden="true"></div>
+  <div class="crt-vignette" aria-hidden="true"></div>
+
+  <div class="system-shell">
+    
+    <!-- TOP SYSTEM BAR -->
+    <header class="top-system-bar" id="top-system-bar">
+      <div class="system-logo-group">
+        <div class="logo-box-outer">
+          <div class="logo-box-inner">SP</div>
+        </div>
+        <div class="brand-info">
+          <div class="brand-title">STREAMPULSE</div>
+          <div class="brand-subtitle">STREAM RELIABILITY ENGINE</div>
+        </div>
+      </div>
+
+      <!-- Terminal Subsystem Quick Tabs -->
+      <nav class="system-nav-tabs" aria-label="System Subsystems">
+        <button class="nav-tab-btn active" data-subsystem="control" id="tab-control">[ CONTROL ]</button>
+        <button class="nav-tab-btn" data-subsystem="streams" id="tab-streams">[ STREAMS ]</button>
+        <button class="nav-tab-btn" data-subsystem="pipelines" id="tab-pipelines">[ PIPELINES ]</button>
+        <button class="nav-tab-btn" data-subsystem="guards" id="tab-guards">[ GUARDS ]</button>
+        <button class="nav-tab-btn" data-subsystem="circuit" id="tab-circuit">[ CIRCUIT ]</button>
+        <button class="nav-tab-btn" data-subsystem="quarantine" id="tab-quarantine">[ QUARANTINE ]</button>
+        <button class="nav-tab-btn" data-subsystem="telemetry" id="tab-telemetry">[ TELEMETRY ]</button>
+        <button class="nav-tab-btn" data-subsystem="recovery" id="tab-recovery">[ RECOVERY ]</button>
+        <button class="nav-tab-btn" data-subsystem="events" id="tab-events">[ EVENTS ]</button>
+        <button class="nav-tab-btn" data-subsystem="policies" id="tab-policies">[ CONFIG ]</button>
+      </nav>
+
+      <!-- System Status Indicators & Controls -->
+      <div class="top-system-status-group">
+        <a href="/" class="btn-brutalist btn-sm" style="text-decoration:none; color:var(--deep-purple);">[ ◀ LANDING ]</a>
+        <div class="system-live-pill" id="system-status-pill">
+          <span class="pulse-dot" id="system-status-dot"></span>
+          <span id="system-status-text">SYSTEM ONLINE</span>
+        </div>
+        <button class="btn-brutalist btn-sm" id="btn-toggle-audio">[ AUDIO: ON ]</button>
+        <button class="btn-icon-terminal" id="btn-toggle-terminal-drawer">[ TERMINAL ]</button>
+      </div>
+    </header>
+
+    <!-- MAIN VIEWPORT WITH PERSISTENT 15-ITEM SIDEBAR -->
+    <div class="main-viewport">
+      
+      <!-- Left Persistent Subsystems Sidebar -->
+      <aside class="left-system-sidebar" aria-label="System Subsystems Navigation">
+        
+        <!-- Category 1: SYSTEM -->
+        <div class="sidebar-category-group">
+          <div class="sidebar-category-title">SYSTEM</div>
+          <a class="sidebar-nav-item active" data-subsystem="control" href="#control">
+            <span>CONTROL</span>
+            <span class="sidebar-nav-num">[01]</span>
+          </a>
+          <a class="sidebar-nav-item" data-subsystem="streams" href="#streams">
+            <span>STREAMS</span>
+            <span class="sidebar-nav-num">[02]</span>
+          </a>
+          <a class="sidebar-nav-item" data-subsystem="pipelines" href="#pipelines">
+            <span>PIPELINES</span>
+            <span class="sidebar-nav-num">[03]</span>
+          </a>
+        </div>
+
+        <!-- Category 2: GUARDS -->
+        <div class="sidebar-category-group">
+          <div class="sidebar-category-title">GUARDS</div>
+          <a class="sidebar-nav-item" data-subsystem="schema" href="#schema">
+            <span>SCHEMA</span>
+            <span class="sidebar-nav-num">[04]</span>
+          </a>
+          <a class="sidebar-nav-item" data-subsystem="null-rate" href="#null-rate">
+            <span>NULL RATE</span>
+            <span class="sidebar-nav-num">[05]</span>
+          </a>
+          <a class="sidebar-nav-item" data-subsystem="cardinality" href="#cardinality">
+            <span>CARDINALITY</span>
+            <span class="sidebar-nav-num">[06]</span>
+          </a>
+          <a class="sidebar-nav-item" data-subsystem="distribution" href="#distribution">
+            <span>DISTRIBUTION</span>
+            <span class="sidebar-nav-num">[07]</span>
+          </a>
+          <a class="sidebar-nav-item" data-subsystem="volume" href="#volume">
+            <span>VOLUME</span>
+            <span class="sidebar-nav-num">[08]</span>
+          </a>
+        </div>
+
+        <!-- Category 3: RELIABILITY -->
+        <div class="sidebar-category-group">
+          <div class="sidebar-category-title">RELIABILITY</div>
+          <a class="sidebar-nav-item" data-subsystem="circuit" href="#circuit">
+            <span>CIRCUIT BREAKER</span>
+            <span class="sidebar-nav-num">[09]</span>
+          </a>
+          <a class="sidebar-nav-item" data-subsystem="quarantine" href="#quarantine">
+            <span>QUARANTINE</span>
+            <span class="sidebar-nav-num">[10]</span>
+          </a>
+          <a class="sidebar-nav-item" data-subsystem="recovery" href="#recovery">
+            <span>RECOVERY</span>
+            <span class="sidebar-nav-num">[11]</span>
+          </a>
+        </div>
+
+        <!-- Category 4: INFRASTRUCTURE -->
+        <div class="sidebar-category-group">
+          <div class="sidebar-category-title">INFRASTRUCTURE</div>
+          <a class="sidebar-nav-item" data-subsystem="telemetry" href="#telemetry">
+            <span>TELEMETRY</span>
+            <span class="sidebar-nav-num">[12]</span>
+          </a>
+          <a class="sidebar-nav-item" data-subsystem="events" href="#events">
+            <span>EVENTS</span>
+            <span class="sidebar-nav-num">[13]</span>
+          </a>
+        </div>
+
+        <!-- Category 5: CONFIGURATION -->
+        <div class="sidebar-category-group">
+          <div class="sidebar-category-title">CONFIGURATION</div>
+          <a class="sidebar-nav-item" data-subsystem="policies" href="#policies">
+            <span>POLICIES</span>
+            <span class="sidebar-nav-num">[14]</span>
+          </a>
+          <a class="sidebar-nav-item" data-subsystem="settings" href="#settings">
+            <span>SETTINGS</span>
+            <span class="sidebar-nav-num">[15]</span>
+          </a>
+        </div>
+
+      </aside>
+
+      <!-- Main Content Workspace -->
+      <main class="content-workspace">
+
+        <!-- ==========================================
+             [01] CONTROL CENTER VIEW
+             ========================================== -->
+        <section class="subsystem-view active-view" id="view-control">
+          
+          <!-- Incident Alert Banner (Toggled dynamically) -->
+          <div class="incident-alert-banner" id="incident-alert-banner" style="display: none;">
+            <div class="alert-title-row">
+              <span class="alert-tag">!! SYSTEM EVENT !!</span>
+              <span class="alert-message" id="incident-alert-text">DATA QUALITY BREACH: NULL RATE SPIKE (27.41% > 15.00%)</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-brutalist btn-sm" onclick="window.openIncidentModal()">[ INSPECT INCIDENT ]</button>
+              <button class="btn-brutalist btn-sm btn-dark" onclick="window.Simulator.healSystem()">[ AUTO-REMEDIATE ]</button>
+            </div>
+          </div>
+
+          <!-- Top Metric Cards Grid -->
+          <div class="control-metrics-grid">
+            <div class="metric-stat-box">
+              <span class="metric-stat-label">TOTAL INGESTION RATE</span>
+              <span class="metric-stat-value" id="metric-events-sec">44,207</span>
+              <div class="metric-stat-sub">
+                <span>EVENTS / SEC</span>
+                <span class="status-badge badge-mint">NORMAL</span>
+              </div>
+            </div>
+
+            <div class="metric-stat-box">
+              <span class="metric-stat-label">AGGREGATE CONSUMER LAG</span>
+              <span class="metric-stat-value" id="metric-consumer-lag">4,634</span>
+              <div class="metric-stat-sub">
+                <span>MSGS IN BACKLOG</span>
+                <span class="status-badge badge-peach">OPTIMAL</span>
+              </div>
+            </div>
+
+            <div class="metric-stat-box">
+              <span class="metric-stat-label">ACTIVE NULL RATE</span>
+              <span class="metric-stat-value" id="metric-null-rate">2.14%</span>
+              <div class="metric-stat-sub">
+                <span>LIMIT THRESHOLD: 15.00%</span>
+                <span class="status-badge badge-mint">HEALTHY</span>
+              </div>
+            </div>
+
+            <div class="metric-stat-box">
+              <span class="metric-stat-label">ACTIVE INCIDENTS</span>
+              <span class="metric-stat-value" id="metric-incidents-count">00</span>
+              <div class="metric-stat-sub">
+                <span>CONTAINED / ISOLATED</span>
+                <span class="status-badge badge-purple">STABLE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Anomaly Injector Action Bar -->
+          <div class="control-action-bar">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-family: var(--font-heading); font-size: 10px;">TEST SIMULATION INJECTOR:</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn-brutalist btn-sm btn-coral" id="btn-inject-null" onclick="window.Simulator.injectNullSpike()">[ INJECT NULL SPIKE ]</button>
+              <button class="btn-brutalist btn-sm btn-coral" id="btn-inject-schema" onclick="window.Simulator.injectSchemaDrift()">[ INJECT SCHEMA DRIFT ]</button>
+              <button class="btn-brutalist btn-sm btn-coral" id="btn-inject-volume" onclick="window.Simulator.injectVolumeBreach()">[ INJECT VOLUME SURGE ]</button>
+              <button class="btn-brutalist btn-sm" id="btn-inject-net" onclick="window.Simulator.injectNetworkDegradation()">[ INJECT eBPF LATENCY ]</button>
+              <button class="btn-brutalist btn-sm btn-mint" id="btn-heal-system" onclick="window.Simulator.healSystem()">[ RESTORE & HEAL ]</button>
+            </div>
+          </div>
+
+          <!-- Live Streaming Pipeline DAG Visualization -->
+          <div class="pipeline-dag-container">
+            <div class="pipeline-dag-header">
+              <span class="dag-title">LIVE DISTRIBUTED PIPELINE DAG (CLICK ANY NODE FOR DIAGNOSTICS)</span>
+              <span class="dag-status-pill">● KINETIC FLOW ACTIVE</span>
+            </div>
+
+            <div class="pipeline-dag-flow">
+              <!-- Node 1: KAFKA -->
+              <div class="dag-node" onclick="window.DAG.inspectNode('kafka')">
+                <div class="dag-node-type">
+                  <span>INGESTION</span>
+                  <span class="status-badge badge-mint">LIVE</span>
+                </div>
+                <div class="dag-node-name">KAFKA CLUSTER</div>
+                <div class="dag-node-stat">
+                  <span>4 TOPICS</span>
+                  <span>42 PARTS</span>
+                </div>
+              </div>
+
+              <!-- Connector 1 -->
+              <div class="dag-connector">
+                <div class="connector-line">
+                  <div class="connector-packet"></div>
+                </div>
+              </div>
+
+              <!-- Node 2: SPARK STRUCTURED STREAMING -->
+              <div class="dag-node" onclick="window.DAG.inspectNode('spark')">
+                <div class="dag-node-type">
+                  <span>RUNTIME</span>
+                  <span class="status-badge badge-mint">500ms</span>
+                </div>
+                <div class="dag-node-name">SPARK STREAMING</div>
+                <div class="dag-node-stat">
+                  <span>BATCH #00483</span>
+                  <span>8 EXECS</span>
+                </div>
+              </div>
+
+              <!-- Connector 2 -->
+              <div class="dag-connector">
+                <div class="connector-line">
+                  <div class="connector-packet"></div>
+                </div>
+              </div>
+
+              <!-- Node 3: STREAMPULSE GUARD -->
+              <div class="dag-node" onclick="window.DAG.inspectNode('guard')">
+                <div class="dag-node-type">
+                  <span>ASSERTION</span>
+                  <span class="status-badge badge-peach">05 GUARDS</span>
+                </div>
+                <div class="dag-node-name">STREAMPULSE GUARD</div>
+                <div class="dag-node-stat">
+                  <span>INLINE D/Q</span>
+                  <span>1.4ms</span>
+                </div>
+              </div>
+
+              <!-- Branch Connector -->
+              <div class="dag-connector">
+                <div class="connector-line">
+                  <div class="connector-packet"></div>
+                </div>
+              </div>
+
+              <!-- Branch Columns: CLEAN vs POISON -->
+              <div class="dag-branch-column">
+                <!-- Clean Route -->
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="dag-node node-clean" onclick="window.DAG.inspectNode('clean')" style="width: 150px;">
+                    <div class="dag-node-type">CLEAN</div>
+                    <div class="dag-node-name">VALID SINK</div>
+                    <div class="dag-node-stat"><span>100% PASS</span></div>
+                  </div>
+                  <div class="dag-connector" style="min-width: 30px;">
+                    <div class="connector-line"><div class="connector-packet"></div></div>
+                  </div>
+                  <div class="dag-node" onclick="window.DAG.inspectNode('minio')" style="width: 170px;">
+                    <div class="dag-node-type">STORAGE</div>
+                    <div class="dag-node-name">MINIO / POSTGRES</div>
+                    <div class="dag-node-stat"><span>PARQUET LAKE</span></div>
+                  </div>
+                </div>
+
+                <!-- Poison Route -->
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="dag-node node-poison" onclick="window.DAG.inspectNode('poison')" style="width: 150px;">
+                    <div class="dag-node-type">POISON</div>
+                    <div class="dag-node-name">CONTAINED</div>
+                    <div class="dag-node-stat"><span>ISOLATED</span></div>
+                  </div>
+                  <div class="dag-connector" style="min-width: 30px;">
+                    <div class="connector-line"><div class="connector-packet poison-packet"></div></div>
+                  </div>
+                  <div class="dag-node node-poison" onclick="window.DAG.inspectNode('quarantine')" style="width: 170px;">
+                    <div class="dag-node-type">VAULT</div>
+                    <div class="dag-node-name">QUARANTINE DLQ</div>
+                    <div class="dag-node-stat"><span>cp_00482 ROLLBACK</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [02] STREAMS MONITOR VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-streams">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">SUBSYSTEM // [02] ACTIVE KAFKA STREAMS MONITOR</div>
+              <div class="terminal-window-controls">
+                <span class="status-badge badge-mint">04 STREAMS RUNNING</span>
+              </div>
+            </div>
+            <div class="terminal-window-body" style="padding: 0;">
+              <div class="terminal-table-wrap">
+                <table class="terminal-table">
+                  <thead>
+                    <tr>
+                      <th>STREAM</th>
+                      <th>STATE</th>
+                      <th>EVENT RATE</th>
+                      <th>CONSUMER LAG</th>
+                      <th>LAST OFFSET</th>
+                      <th>PARTS</th>
+                      <th>SCHEMA</th>
+                      <th>CIRCUIT</th>
+                    </tr>
+                  </thead>
+                  <tbody id="streams-table-body">
+                    <!-- Populated dynamically via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stream Detail Drawer -->
+          <div class="stream-inspector-drawer">
+            <div>
+              <div style="font-family: var(--font-heading); font-size: 10px; margin-bottom: 8px;">SELECTED STREAM CONFIGURATION:</div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div class="telemetry-row"><span>TOPIC:</span> <strong id="drawer-stream-topic">prod.cdc.orders.v2</strong></div>
+                <div class="telemetry-row"><span>RATE:</span> <strong id="drawer-stream-rate">18,421 records/sec</strong></div>
+                <div class="telemetry-row"><span>CONSUMER LAG:</span> <strong id="drawer-stream-lag">2,381 msgs</strong></div>
+                <div class="telemetry-row"><span>CURRENT BATCH:</span> <strong id="drawer-stream-batch">#00483</strong></div>
+                <div class="telemetry-row"><span>SCHEMA VERSION:</span> <strong id="drawer-stream-schema">v2.4.0 (Avro)</strong></div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-family: var(--font-heading); font-size: 10px; margin-bottom: 8px;">PARTITION LEADER DISTRIBUTION:</div>
+              <div class="stream-part-list">
+                <div class="part-item"><span>PARTITION #0 [Broker 101]</span> <span>OFFSET: 611,480 (Lag: 290)</span></div>
+                <div class="part-item"><span>PARTITION #1 [Broker 102]</span> <span>OFFSET: 611,502 (Lag: 301)</span></div>
+                <div class="part-item"><span>PARTITION #2 [Broker 103]</span> <span>OFFSET: 611,490 (Lag: 284)</span></div>
+                <div class="part-item"><span>PARTITION #3 [Broker 101]</span> <span>OFFSET: 611,510 (Lag: 312)</span></div>
+                <div class="part-item"><span>PARTITION #4 [Broker 102]</span> <span>OFFSET: 611,475 (Lag: 298)</span></div>
+                <div class="part-item"><span>PARTITION #5 [Broker 103]</span> <span>OFFSET: 611,488 (Lag: 304)</span></div>
+                <div class="part-item"><span>PARTITION #6 [Broker 101]</span> <span>OFFSET: 611,520 (Lag: 295)</span></div>
+                <div class="part-item"><span>PARTITION #7 [Broker 102]</span> <span>OFFSET: 611,515 (Lag: 297)</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [03] PIPELINES VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-pipelines">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">SUBSYSTEM // [03] CONFIG PIPELINES</div>
+              <span class="status-badge badge-mint">03 CONFIGURED</span>
+            </div>
+            <div class="terminal-window-body">
+              <div class="pipelines-grid" id="pipelines-grid-container">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [04] SCHEMA GUARD VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-schema">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">GUARD // [04] SCHEMA INTEGRITY & DRIFT DETECTOR</div>
+              <span class="status-badge badge-mint">MODE: STRICT_AVRO</span>
+            </div>
+            <div class="terminal-window-body">
+              <div style="font-size: 20px;">
+                Evaluates every micro-batch against registered schema definitions. Detects missing mandatory columns, unannounced field additions, and data type mismatch regressions.
+              </div>
+
+              <div class="schema-diff-grid">
+                <div class="schema-box">
+                  <div style="font-family:var(--font-heading); font-size:10px; border-bottom:2px solid var(--deep-purple); padding-bottom:6px; margin-bottom:8px; color:var(--healthy-mint);">
+                    EXPECTED SCHEMA (v2.4.0)
+                  </div>
+                  <div class="schema-field-row"><span>order_id: String (UUID)</span> <span>REQUIRED</span></div>
+                  <div class="schema-field-row"><span>customer_id: String</span> <span>NON-NULL</span></div>
+                  <div class="schema-field-row"><span>amount: Double</span> <span>NON-NULL</span></div>
+                  <div class="schema-field-row"><span>status: String</span> <span>EXPECTED</span></div>
+                  <div class="schema-field-row"><span>timestamp: Long (UTC)</span> <span>REQUIRED</span></div>
+                </div>
+
+                <div class="schema-box">
+                  <div style="font-family:var(--font-heading); font-size:10px; border-bottom:2px solid var(--deep-purple); padding-bottom:6px; margin-bottom:8px; color:var(--alert-coral);">
+                    RECEIVED IN BATCH #00483 (DRIFT DETECTED)
+                  </div>
+                  <div class="schema-field-row"><span>order_id: String (UUID)</span> <span class="status-badge badge-mint">MATCH</span></div>
+                  <div class="schema-field-row"><span>customer_id: null</span> <span class="status-badge badge-coral">NULL_VIOLATION</span></div>
+                  <div class="schema-field-row"><span>amount: Double</span> <span class="status-badge badge-mint">MATCH</span></div>
+                  <div class="schema-field-row"><span class="field-missing">status: [MISSING]</span> <span class="status-badge badge-coral">MISSING</span></div>
+                  <div class="schema-field-row"><span class="field-unexpected">state: String [UNEXPECTED]</span> <span class="status-badge badge-peach">UNEXPECTED</span></div>
+                </div>
+              </div>
+
+              <div style="margin-top:16px; background:var(--panel-peach); border:2px solid var(--deep-purple); padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <span style="font-family:var(--font-heading); font-size:10px;">ACTION TRIGGER:</span>
+                  <span style="font-weight:bold; margin-left:8px;">AUTOMATIC QUARANTINE TO MinIO VAULT</span>
+                </div>
+                <button class="btn-brutalist btn-sm btn-coral" onclick="window.Simulator.injectSchemaDrift()">[ TEST SCHEMA DRIFT ]</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [05] NULL RATE GUARD VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-null-rate">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">GUARD // [05] NULL RATE MONITOR</div>
+              <span class="status-badge badge-mint">THRESHOLD: 15.00%</span>
+            </div>
+            <div class="terminal-window-body">
+              <div style="font-size: 20px;">
+                Tracks the proportion of empty, None, and null-valued columns in real-time streams. Spikes indicate producer-side bugs or corrupted serialization.
+              </div>
+
+              <div style="margin:16px 0; background:var(--panel-peach); border:3px solid var(--deep-purple); padding:16px;">
+                <div style="font-family:var(--font-heading); font-size:10px; margin-bottom:10px;">NULL RATE HISTORICAL BATCH PROGRESSION:</div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:8px; height:120px; border-bottom:2px solid var(--deep-purple); padding-bottom:4px;">
+                  <div style="flex:1; text-align:center;">
+                    <div style="background:var(--healthy-mint); height:18px; margin:0 auto; width:80%;"></div>
+                    <div style="font-size:14px; margin-top:4px;">#00479 (2.14%)</div>
+                  </div>
+                  <div style="flex:1; text-align:center;">
+                    <div style="background:var(--healthy-mint); height:20px; margin:0 auto; width:80%;"></div>
+                    <div style="font-size:14px; margin-top:4px;">#00480 (2.18%)</div>
+                  </div>
+                  <div style="flex:1; text-align:center;">
+                    <div style="background:var(--healthy-mint); height:16px; margin:0 auto; width:80%;"></div>
+                    <div style="font-size:14px; margin-top:4px;">#00481 (2.03%)</div>
+                  </div>
+                  <div style="flex:1; text-align:center;">
+                    <div style="background:var(--healthy-mint); height:19px; margin:0 auto; width:80%;"></div>
+                    <div style="font-size:14px; margin-top:4px;">#00482 (2.11%)</div>
+                  </div>
+                  <div style="flex:1; text-align:center;">
+                    <div style="background:var(--alert-coral); height:90px; margin:0 auto; width:80%; animation:alertPulse 1s infinite;"></div>
+                    <div style="font-size:14px; margin-top:4px; color:red; font-weight:bold;">#00483 (27.41%)</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:flex-end;">
+                <button class="btn-brutalist btn-coral" onclick="window.Simulator.injectNullSpike()">[ TRIGGER NULL SPIKE BREACH ]</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [06] CARDINALITY GUARD VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-cardinality">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">GUARD // [06] CARDINALITY DIVERSITY MONITOR</div>
+              <span class="status-badge badge-mint">STATUS: NOMINAL</span>
+            </div>
+            <div class="terminal-window-body">
+              <div style="font-size: 20px;">
+                Measures Shannon entropy of partition key distributions to guard against key hot-spotting, stuck producers, or synthetic load flooding.
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0;">
+                <div class="metric-stat-box">
+                  <span class="metric-stat-label">BASELINE KEY DIVERSITY</span>
+                  <span class="metric-stat-value">12,420</span>
+                  <span class="metric-stat-sub">DISTINCT KEYS / 10K MSGS</span>
+                </div>
+                <div class="metric-stat-box">
+                  <span class="metric-stat-label">CURRENT OBSERVED RATIO</span>
+                  <span class="metric-stat-value">1.20x</span>
+                  <span class="metric-stat-sub">THRESHOLD BOUND: > 0.40x ENTROPY</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [07] DISTRIBUTION GUARD VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-distribution">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">GUARD // [07] NUMERICAL DISTRIBUTION & Z-SCORE DRIFT</div>
+              <span class="status-badge badge-mint">Z-SCORE: 1.12</span>
+            </div>
+            <div class="terminal-window-body">
+              <div style="font-size: 20px;">
+                Evaluates distribution drift across streaming financial figures (e.g. order amount, transaction currency conversion). Flags Z-score outliers (> 3.50σ).
+              </div>
+
+              <div style="background:var(--panel-peach); border:3px solid var(--deep-purple); padding:16px; margin:16px 0;">
+                <div class="telemetry-row"><span>BASELINE MEAN ($):</span> <strong>$142.50 (σ = $28.40)</strong></div>
+                <div class="telemetry-row"><span>CURRENT BATCH MEAN ($):</span> <strong>$146.10 (σ = $29.10)</strong></div>
+                <div class="telemetry-row"><span>CALCULATED Z-SCORE:</span> <strong style="color:green;">1.12 NOMINAL</strong></div>
+                <div class="telemetry-row"><span>MAX PERMISSIBLE BOUND:</span> <strong>3.50 Z-SCORE</strong></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [08] VOLUME GUARD VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-volume">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">GUARD // [08] VOLUME & THROUGHPUT SURGE DETECTOR</div>
+              <span class="status-badge badge-mint">MAX SURGE: +50.00%</span>
+            </div>
+            <div class="terminal-window-body">
+              <div style="font-size: 20px;">
+                Monitors throughput deviation against rolling averages to contain retry storms, runaway client loops, and DDoS spikes before downstream database locks occur.
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0;">
+                <div class="metric-stat-box">
+                  <span class="metric-stat-label">EXPECTED EVENTS / MIN</span>
+                  <span class="metric-stat-value">100,000</span>
+                  <span class="metric-stat-sub">ROLLING 60-SEC WINDOW</span>
+                </div>
+                <div class="metric-stat-box">
+                  <span class="metric-stat-label">OBSERVED RATE DEVIATION</span>
+                  <span class="metric-stat-value">+4.20%</span>
+                  <span class="metric-stat-sub">STATUS: NORMAL</span>
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:flex-end;">
+                <button class="btn-brutalist btn-coral" onclick="window.Simulator.injectVolumeBreach()">[ SIMULATE +184% RETRY STORM ]</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [09] CIRCUIT BREAKER VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-circuit">
+          <div class="circuit-state-display">
+            
+            <!-- Left: Kinetic Finite State Machine Diagram -->
+            <div class="circuit-state-machine">
+              <div style="font-family: var(--font-heading); font-size: 11px; margin-bottom: 6px;">FINITE STATE MACHINE (KINETIC TRANSITIONS):</div>
+
+              <div class="fsm-step active-step" id="fsm-step-closed">
+                <span>[01] CLOSED (NORMAL FLOW)</span>
+                <span class="status-badge badge-mint">COMMITTING</span>
+              </div>
+              <div class="fsm-step-arrow">▼ (Guard Assertion Breach Detected)</div>
+
+              <div class="fsm-step" id="fsm-step-breach">
+                <span>[02] BREACH DETECTED</span>
+                <span class="status-badge badge-coral">ASSERTION FAILED</span>
+              </div>
+              <div class="fsm-step-arrow">▼ (Sink Commits Halted)</div>
+
+              <div class="fsm-step" id="fsm-step-open">
+                <span>[03] OPEN (CIRCUIT TRIPPED)</span>
+                <span class="status-badge badge-coral">BLOCKED</span>
+              </div>
+              <div class="fsm-step-arrow">▼ (Poison Batch Isolated to Vault)</div>
+
+              <div class="fsm-step" id="fsm-step-quarantine">
+                <span>[04] QUARANTINE CONTAINMENT</span>
+                <span class="status-badge badge-purple">ISOLATED</span>
+              </div>
+              <div class="fsm-step-arrow">▼ (Canary Probe Batch Injected)</div>
+
+              <div class="fsm-step" id="fsm-step-halfopen">
+                <span>[05] HALF-OPEN (CANARY PROBE)</span>
+                <span class="status-badge badge-peach">TESTING</span>
+              </div>
+              <div class="fsm-step-arrow">▼ (Checkpoint Restored & Verified)</div>
+
+              <div class="fsm-step" id="fsm-step-recovered">
+                <span>[06] RECOVERED</span>
+                <span class="status-badge badge-mint">SAFE</span>
+              </div>
+            </div>
+
+            <!-- Right: Current Live Breaker Status & Manual Actions -->
+            <div class="circuit-live-panel">
+              <div>
+                <div style="font-family: var(--font-heading); font-size: 11px; margin-bottom: 12px;">CURRENT CIRCUIT BREAKER STATUS:</div>
+                <div class="circuit-huge-state" id="circuit-huge-state">STATE: CLOSED</div>
+
+                <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+                  <div class="telemetry-row"><span>TRIGGER REASON:</span> <strong id="circuit-state-reason">NONE</strong></div>
+                  <div class="telemetry-row"><span>AFFECTED STREAM:</span> <strong id="circuit-state-stream">orders</strong></div>
+                  <div class="telemetry-row"><span>ACTIVE BATCH:</span> <strong id="circuit-state-batch">#00483</strong></div>
+                  <div class="telemetry-row"><span>PIPELINE ACTION:</span> <strong id="circuit-state-action">COMMITTING CLEAN SINK</strong></div>
+                </div>
+              </div>
+
+              <div style="border-top: 2px dashed var(--deep-purple); padding-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn-brutalist btn-coral" onclick="window.CircuitBreaker.manualTrip()">[ TRIP BREAKER ]</button>
+                <button class="btn-brutalist btn-sm" onclick="window.CircuitBreaker.manualHalfOpen()">[ PROBE HALF-OPEN ]</button>
+                <button class="btn-brutalist btn-mint" onclick="window.CircuitBreaker.manualReset()">[ RESET TO CLOSED ]</button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [10] QUARANTINE DEAD-LETTER VAULT VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-quarantine">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">SUBSYSTEM // [10] QUARANTINE DEAD-LETTER VAULT</div>
+              <div class="terminal-window-controls">
+                <span class="status-badge badge-coral">ISOLATION ACTIVE</span>
+              </div>
+            </div>
+            <div class="terminal-window-body" style="padding: 0;">
+              <div class="terminal-table-wrap">
+                <table class="terminal-table">
+                  <thead>
+                    <tr>
+                      <th>BATCH</th>
+                      <th>STREAM</th>
+                      <th>REASON</th>
+                      <th>STATUS</th>
+                      <th>RECORDS</th>
+                      <th>ACTIONS</th>
+                    </tr>
+                  </thead>
+                  <tbody id="quarantine-table-body">
+                    <!-- Populated dynamically via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [11] CHECKPOINT RECOVERY VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-recovery">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">SUBSYSTEM // [11] CHECKPOINT-AWARE RESTORATION & RESUMPTION</div>
+              <div class="terminal-window-controls">
+                <span class="status-badge badge-mint">RECOVERY READY</span>
+              </div>
+            </div>
+            <div class="terminal-window-body">
+              <div style="margin-bottom: 16px; font-size: 20px;">
+                StreamPulse guarantees continuous streaming availability by rolling back RocksDB micro-batch state to the last verified clean checkpoint (<code style="background:var(--panel-peach); padding:2px 6px; font-weight:bold;">cp_00482</code>) and isolating poisoned batch #00483 to MinIO storage.
+              </div>
+
+              <div class="recovery-dag-sequence">
+                <div class="recovery-node node-valid">
+                  <div>VALID BATCH</div>
+                  <div style="font-size: 16px; font-weight: bold; margin-top: 4px;">#00481</div>
+                  <div style="font-size: 12px; opacity: 0.8;">cp_00481</div>
+                </div>
+                <div style="font-family: var(--font-heading); font-size: 14px;">➔</div>
+
+                <div class="recovery-node node-valid">
+                  <div>VALID BATCH</div>
+                  <div style="font-size: 16px; font-weight: bold; margin-top: 4px;">#00482</div>
+                  <div style="font-size: 12px; opacity: 0.8;">cp_00482</div>
+                </div>
+                <div style="font-family: var(--font-heading); font-size: 14px;">➔</div>
+
+                <div class="recovery-node node-poison">
+                  <div>POISON BATCH</div>
+                  <div style="font-size: 16px; font-weight: bold; margin-top: 4px;">#00483</div>
+                  <div style="font-size: 12px; opacity: 0.8;">QUARANTINED</div>
+                </div>
+                <div style="font-family: var(--font-heading); font-size: 14px;">➔</div>
+
+                <div class="recovery-node node-active-checkpoint">
+                  <div>RESTORE CP</div>
+                  <div style="font-size: 16px; font-weight: bold; margin-top: 4px;">cp_00482</div>
+                  <div style="font-size: 12px;">ACTIVE STATE</div>
+                </div>
+                <div style="font-family: var(--font-heading); font-size: 14px;">➔</div>
+
+                <div class="recovery-node node-valid">
+                  <div>RESUME STREAM</div>
+                  <div style="font-size: 16px; font-weight: bold; margin-top: 4px;">#00484</div>
+                  <div style="font-size: 12px; opacity: 0.8;">ONLINE</div>
+                </div>
+              </div>
+
+              <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                  <span style="font-family: var(--font-heading); font-size: 10px;">TARGET RESTORE CHECKPOINT:</span>
+                  <span style="font-weight: bold; margin-left: 8px;">s3://streampulse-checkpoints/prod/orders/cp_00482.chk</span>
+                </div>
+                <button class="btn-brutalist btn-mint" onclick="window.Simulator.healSystem()">[ RESTORE CHECKPOINT & RESUME STREAM ]</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [12] eBPF TELEMETRY VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-telemetry">
+          <div class="telemetry-split-grid">
+            
+            <!-- Infrastructure Kernel Telemetry (eBPF) -->
+            <div class="telemetry-panel">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--deep-purple); padding-bottom: 6px;">
+                <span style="font-family: var(--font-heading); font-size: 10px; font-weight: bold;">INFRASTRUCTURE TELEMETRY (eBPF)</span>
+                <span class="status-badge badge-purple">KERNEL PROBES</span>
+              </div>
+              
+              <div class="telemetry-row"><span>CPU USAGE:</span> <strong id="tel-val-cpu">42%</strong></div>
+              <div class="telemetry-row"><span>MEMORY ALLOCATION:</span> <strong id="tel-val-mem">61%</strong></div>
+              <div class="telemetry-row"><span>NETWORK RX THROUGHPUT:</span> <strong id="tel-val-net">82.4 MB/s</strong></div>
+              <div class="telemetry-row"><span>TCP PACKET LOSS:</span> <strong id="tel-val-loss">0.02%</strong></div>
+              <div class="telemetry-row"><span>TCP RETRANSMITS:</span> <strong id="tel-val-retrans">0.01%</strong></div>
+              <div class="telemetry-row"><span>SOCKET RTT LATENCY:</span> <strong id="tel-val-lat">3.1 ms</strong></div>
+            </div>
+
+            <!-- Data Quality Telemetry (Inline Application Layer) -->
+            <div class="telemetry-panel">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--deep-purple); padding-bottom: 6px;">
+                <span style="font-family: var(--font-heading); font-size: 10px; font-weight: bold;">DATA HEALTH TELEMETRY (APPLICATION)</span>
+                <span class="status-badge badge-mint">ASSERTIONS</span>
+              </div>
+
+              <div class="telemetry-row"><span>NULL RATE:</span> <strong id="tel-val-dq-null">2.14%</strong></div>
+              <div class="telemetry-row"><span>SCHEMA DRIFT:</span> <strong id="tel-val-dq-schema">VERIFIED</strong></div>
+              <div class="telemetry-row"><span>VOLUME DELTA:</span> <strong id="tel-val-dq-vol">+4.2%</strong></div>
+              <div class="telemetry-row"><span>CARDINALITY SHIFT:</span> <strong>0.88 ENTROPY</strong></div>
+              <div class="telemetry-row"><span>Z-SCORE DRIFT:</span> <strong>1.12 NOMINAL</strong></div>
+              <div class="telemetry-row"><span>DEAD-LETTER COUNT:</span> <strong>03 BATCHES</strong></div>
+            </div>
+
+          </div>
+
+          <!-- Root-Cause Correlation Analyzer -->
+          <div class="terminal-window" style="margin-top: 10px;">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">ROOT-CAUSE CORRELATION ENGINE (DATA VS INFRASTRUCTURE ANOMALY)</div>
+              <button class="btn-brutalist btn-sm btn-peach" onclick="window.Telemetry.runCorrelationAnalysis()">[ RUN CORRELATION DIAGNOSTIC ]</button>
+            </div>
+            <div class="terminal-window-body">
+              <div>
+                Distinguish upstream application payload anomalies (e.g. unannounced schema drift) from infrastructure kernel bottlenecks (e.g. packet drops, NIC saturation) using synchronized cross-layer telemetry.
+              </div>
+              <div id="correlation-verdict-box">
+                <!-- Rendered on button click -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [13] SYSTEM EVENTS VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-events">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">SUBSYSTEM // [13] SYSTEM EVENT STREAM</div>
+              <span class="status-badge badge-mint">LIVE FEED</span>
+            </div>
+            
+            <div class="events-filter-bar">
+              <span style="font-family:var(--font-heading); font-size:9px;">FILTER:</span>
+              <button class="filter-btn active" data-filter="ALL">[ ALL ]</button>
+              <button class="filter-btn" data-filter="STREAM">[ STREAM ]</button>
+              <button class="filter-btn" data-filter="GUARD">[ GUARD ]</button>
+              <button class="filter-btn" data-filter="CIRCUIT">[ CIRCUIT ]</button>
+              <button class="filter-btn" data-filter="QUARANTINE">[ QUARANTINE ]</button>
+              <button class="filter-btn" data-filter="RECOVERY">[ RECOVERY ]</button>
+              <button class="filter-btn" data-filter="INFRASTRUCTURE">[ INFRASTRUCTURE ]</button>
+            </div>
+
+            <div class="terminal-window-body" style="padding: 0;">
+              <div class="terminal-table-wrap">
+                <table class="terminal-table">
+                  <thead>
+                    <tr>
+                      <th>TIME</th>
+                      <th>CATEGORY</th>
+                      <th>SOURCE</th>
+                      <th>MESSAGE</th>
+                      <th>TAG</th>
+                    </tr>
+                  </thead>
+                  <tbody id="events-page-table-body">
+                    <!-- Populated via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [14] POLICIES VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-policies">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">CONFIGURATION // [14] RELIABILITY GUARD POLICIES</div>
+              <span class="status-badge badge-mint">STRICT MODE</span>
+            </div>
+            <div class="terminal-window-body">
+              <div class="policy-config-grid">
+                
+                <div class="policy-card">
+                  <div style="font-family:var(--font-heading); font-size:10px;">NULL RATE THRESHOLD</div>
+                  <div style="font-size:16px;">Maximum tolerated null percentage before containment trigger.</div>
+                  <div class="policy-input-row">
+                    <input type="text" class="policy-input-field" id="input-pol-null" value="15.00">
+                    <span style="font-weight:bold;">%</span>
+                    <button class="btn-brutalist btn-sm" onclick="window.savePolicy('pol-1', 'input-pol-null')">[ SAVE ]</button>
+                  </div>
+                </div>
+
+                <div class="policy-card">
+                  <div style="font-family:var(--font-heading); font-size:10px;">CARDINALITY MINIMUM</div>
+                  <div style="font-size:16px;">Minimum distinct entropy diversity across partition keys.</div>
+                  <div class="policy-input-row">
+                    <input type="text" class="policy-input-field" id="input-pol-card" value="0.40">
+                    <span style="font-weight:bold;">entropy</span>
+                    <button class="btn-brutalist btn-sm" onclick="window.savePolicy('pol-2', 'input-pol-card')">[ SAVE ]</button>
+                  </div>
+                </div>
+
+                <div class="policy-card">
+                  <div style="font-family:var(--font-heading); font-size:10px;">VOLUME SPIKE LIMIT</div>
+                  <div style="font-size:16px;">Maximum sudden rate surge over 60s baseline.</div>
+                  <div class="policy-input-row">
+                    <input type="text" class="policy-input-field" id="input-pol-vol" value="50.00">
+                    <span style="font-weight:bold;">%</span>
+                    <button class="btn-brutalist btn-sm" onclick="window.savePolicy('pol-3', 'input-pol-vol')">[ SAVE ]</button>
+                  </div>
+                </div>
+
+                <div class="policy-card">
+                  <div style="font-family:var(--font-heading); font-size:10px;">SCHEMA VALIDATION MODE</div>
+                  <div style="font-size:16px;">Strict Avro 1.11.1 drift enforcement policy.</div>
+                  <div class="policy-input-row">
+                    <input type="text" class="policy-input-field" id="input-pol-schema" value="STRICT_AVRO">
+                    <button class="btn-brutalist btn-sm" onclick="window.savePolicy('pol-4', 'input-pol-schema')">[ SAVE ]</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             [15] SETTINGS VIEW
+             ========================================== -->
+        <section class="subsystem-view" id="view-settings">
+          <div class="terminal-window">
+            <div class="terminal-window-header">
+              <div class="terminal-window-title">CONFIGURATION // [15] SYSTEM & BROKER SETTINGS</div>
+              <span class="status-badge badge-purple">SYSCONFIG</span>
+            </div>
+            <div class="terminal-window-body">
+              <div style="display:flex; flex-direction:column; gap:12px; font-size:19px;">
+                <div class="telemetry-row"><span>KAFKA BOOTSTRAP SERVERS:</span> <strong>localhost:9092, localhost:9093</strong></div>
+                <div class="telemetry-row"><span>SPARK CHECKPOINT DIR:</span> <strong>s3://streampulse-checkpoints/prod/</strong></div>
+                <div class="telemetry-row"><span>MINIO QUARANTINE BUCKET:</span> <strong>s3://streampulse-quarantine/</strong></div>
+                <div class="telemetry-row"><span>POSTGRESQL METADATA DSN:</span> <strong>postgresql://pulse:***@localhost:5432/meta</strong></div>
+                <div class="telemetry-row"><span>eBPF KERNEL PROBE INTERVAL:</span> <strong>1000ms (Clock 1000Hz)</strong></div>
+                <div class="telemetry-row"><span>FASTAPI CONTROL PLANE:</span> <strong>http://localhost:8000 (WebSocket: Active)</strong></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             PERSISTENT DOCKABLE EVENT TERMINAL & CLI
+             ========================================== -->
+        <div class="event-terminal-dock" id="event-terminal-dock">
+          <div class="terminal-window-header" style="border-bottom: 2px solid var(--deep-purple);">
+            <div class="terminal-window-title">> LIVE SYSTEM EVENT STREAM & CLI INTERPRETER</div>
+            <div class="terminal-window-controls">
+              <button class="btn-brutalist btn-sm" onclick="window.TerminalREPL.execute('help')" style="padding:2px 6px; font-size:8px;">[ HELP ]</button>
+              <button class="btn-brutalist btn-sm" onclick="window.TerminalREPL.execute('clear')" style="padding:2px 6px; font-size:8px;">[ CLEAR ]</button>
+            </div>
+          </div>
+
+          <!-- Live Event Logs Container -->
+          <div class="event-terminal-body" id="event-terminal-logs">
+            <!-- Populated dynamically via JS -->
+          </div>
+
+          <!-- Terminal CLI Input Field -->
+          <div class="terminal-cli-input-row">
+            <span class="cli-prompt-symbol">> STREAMPULSE CLI:</span>
+            <input type="text" class="cli-input-field" id="cli-input" placeholder="Type 'help', 'status', 'inject null', 'quarantine list', 'heal'..." autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+
+    <!-- GLOBAL PERSISTENT BOTTOM STATUS BAR -->
+    <div class="global-system-status-bar">
+      <div style="font-family: var(--font-heading); font-size: 10px; font-weight: bold;">
+        STREAMPULSE CORE
+      </div>
+      <div class="status-bar-node-group">
+        <div class="status-bar-node"><span class="status-dot-sm"></span> KAFKA: CONNECTED</div>
+        <div class="status-bar-node"><span class="status-dot-sm"></span> SPARK: RUNNING</div>
+        <div class="status-bar-node"><span class="status-dot-sm"></span> MINIO: CONNECTED</div>
+        <div class="status-bar-node"><span class="status-dot-sm"></span> POSTGRES: CONNECTED</div>
+        <div class="status-bar-node"><span class="status-dot-sm"></span> eBPF: ACTIVE</div>
+        <div class="status-bar-node" id="status-ws-indicator"><span class="status-dot-sm"></span> WS: SYNCED</div>
+      </div>
+    </div>
+
+    <!-- SYSTEM FOOTER -->
+    <footer class="system-footer">
+      <div class="footer-brand">
+        <span style="font-weight:bold;">STREAMPULSE</span>
+        <span>STREAM RELIABILITY ENGINE</span>
+      </div>
+      <div class="footer-tech-stack">
+        <span>KAFKA</span> / <span>SPARK</span> / <span>MINIO</span> / <span>POSTGRESQL</span> / <span>eBPF</span>
+      </div>
+      <div class="footer-meta">
+        <span>VER: <strong>80.S.PULSE</strong></span>
+        <span>SYSTEM: <strong>ONLINE</strong></span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- MODAL 1: DAG NODE INSPECTOR -->
+  <div class="terminal-modal-backdrop hidden" id="dag-inspector-modal">
+    <div class="terminal-modal-box">
+      <div class="terminal-window-header">
+        <div class="terminal-window-title" id="modal-node-title">NODE TELEMETRY INSPECTOR</div>
+        <div class="terminal-window-controls">
+          <button class="win-ctrl-btn" onclick="window.DAG.closeModal()">X</button>
+        </div>
+      </div>
+      <div class="terminal-window-body" id="modal-node-content">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: QUARANTINE PAYLOAD INSPECTOR -->
+  <div class="terminal-modal-backdrop hidden" id="quarantine-modal">
+    <div class="terminal-modal-box">
+      <div class="terminal-window-header">
+        <div class="terminal-window-title" id="modal-quarantine-title">QUARANTINE / BATCH_00483</div>
+        <div class="terminal-window-controls">
+          <button class="win-ctrl-btn" onclick="window.Quarantine.closeModal()">X</button>
+        </div>
+      </div>
+      <div class="terminal-window-body" id="modal-quarantine-content">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: DELETE CONFIRMATION DIALOG -->
+  <div class="terminal-modal-backdrop hidden" id="delete-confirm-modal">
+    <div class="terminal-modal-box" style="max-width:550px;">
+      <div class="terminal-window-header" style="background:var(--alert-coral); color:var(--deep-purple);">
+        <div class="terminal-window-title">!! CONFIRM AUDIT PURGE !!</div>
+        <div class="terminal-window-controls">
+          <button class="win-ctrl-btn" onclick="window.Quarantine.closeDeleteModal()">X</button>
+        </div>
+      </div>
+      <div class="terminal-window-body" style="background:var(--bg-lavender); padding:20px;">
+        <div style="font-family:var(--font-heading); font-size:12px; color:var(--deep-purple); margin-bottom:12px;">
+          DELETE QUARANTINE DATA?
+        </div>
+        <div style="font-size:18px; line-height:1.4; margin-bottom:20px;">
+          THIS ACTION CANNOT BE REVERSED. The selected poisoned batch object will be permanently purged from the MinIO dead-letter vault and removed from audit logs.
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button class="btn-brutalist btn-sm" onclick="window.Quarantine.closeDeleteModal()">[ CANCEL ]</button>
+          <button class="btn-brutalist btn-sm btn-coral" onclick="window.Quarantine.confirmDelete()">[ CONFIRM DELETE ]</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: INCIDENT DETAIL MODAL -->
+  <div class="terminal-modal-backdrop hidden" id="incident-detail-modal">
+    <div class="terminal-modal-box" style="max-width:650px;">
+      <div class="terminal-window-header" style="background:var(--alert-coral); color:var(--deep-purple);">
+        <div class="terminal-window-title">INCIDENT ROOT-CAUSE DRILLDOWN</div>
+        <div class="terminal-window-controls">
+          <button class="win-ctrl-btn" onclick="document.getElementById('incident-detail-modal').classList.add('hidden')">X</button>
+        </div>
+      </div>
+      <div class="terminal-window-body" id="incident-modal-content">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/audio-effects.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/simulator.js"></script>
+  <script src="js/pipeline-dag.js"></script>
+  <script src="js/circuit-breaker.js"></script>
+  <script src="js/quarantine.js"></script>
+  <script src="js/telemetry.js"></script>
+  <script src="js/terminal-repl.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

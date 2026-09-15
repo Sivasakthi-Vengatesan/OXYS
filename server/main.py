@@ -242,8 +242,15 @@ def post_heal_simulation():
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 @app.get("/")
+@app.get("/index.html")
 async def serve_index():
     return FileResponse(os.path.join(base_dir, "index.html"))
 
+@app.get("/app")
+@app.get("/app.html")
+async def serve_app():
+    return FileResponse(os.path.join(base_dir, "app.html"))
+
 app.mount("/styles", StaticFiles(directory=os.path.join(base_dir, "styles")), name="styles")
 app.mount("/js", StaticFiles(directory=os.path.join(base_dir, "js")), name="js")
+
