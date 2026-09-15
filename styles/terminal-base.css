@@ -1,0 +1,170 @@
+/* ==========================================================================
+   STREAMPULSE - 80s PASTEL TERMINAL BASE STYLESHEET
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+:root {
+  /* 80s Pastel Terminal Color Palette */
+  --bg-lavender: #e8d5f2;
+  --panel-peach: #ffd89b;
+  --healthy-mint: #a8e6cf;
+  --alert-coral: #ffb8a1;
+  --deep-purple: #4a3b52;
+  
+  /* High-contrast terminal screens / insets */
+  --term-dark: #271a2e;
+  --term-dark-subtle: #362440;
+  --term-dark-glow: #3f2a4a;
+  --text-dim: #7f698a;
+  --text-bright: #ffffff;
+  --text-mint: #a8e6cf;
+  --text-peach: #ffd89b;
+  --text-coral: #ffb8a1;
+
+  /* Typography */
+  --font-heading: 'Press Start 2P', monospace, cursive;
+  --font-data: 'VT323', monospace;
+
+  /* Brutalist Shadows */
+  --shadow-primary: 4px 4px 0 var(--deep-purple);
+  --shadow-double: 4px 4px 0 var(--deep-purple), 8px 8px 0 var(--alert-coral);
+  --shadow-double-active: 2px 2px 0 var(--deep-purple), 4px 4px 0 var(--alert-coral);
+  --shadow-button: 0 6px 0 var(--alert-coral);
+  --shadow-button-active: 0 2px 0 var(--alert-coral);
+
+  /* Geometry - STRICT 0px BORDER RADIUS */
+  --radius-none: 0px;
+  --border-2: 2px solid var(--deep-purple);
+  --border-4: 4px solid var(--deep-purple);
+  --border-coral-4: 4px solid var(--alert-coral);
+  --border-mint-2: 2px solid var(--healthy-mint);
+  --border-coral-2: 2px solid var(--alert-coral);
+}
+
+/* Reset & Box Sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border-radius: 0px !important; /* Strict requirement: 0px radius everywhere */
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  image-rendering: pixelated;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-lavender);
+  color: var(--deep-purple);
+  font-family: var(--font-data);
+  font-size: 20px;
+  line-height: 1.3;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Custom retro scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-lavender);
+  border-left: 2px solid var(--deep-purple);
+  border-top: 2px solid var(--deep-purple);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--panel-peach);
+  border: 2px solid var(--deep-purple);
+  box-shadow: inset -2px -2px 0 var(--alert-coral);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--alert-coral);
+}
+
+/* CRT Scanlines Overlay */
+.crt-scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none !important;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(232, 213, 242, 0) 0px,
+    rgba(232, 213, 242, 0) 2px,
+    rgba(168, 230, 207, 0.14) 2px,
+    rgba(168, 230, 207, 0.14) 4px
+  );
+  opacity: 0.85;
+}
+
+/* Subtle CRT Flicker */
+@keyframes crtFlicker {
+  0% { opacity: 0.97; }
+  50% { opacity: 0.99; }
+  52% { opacity: 0.95; }
+  54% { opacity: 0.98; }
+  80% { opacity: 0.97; }
+  90% { opacity: 1; }
+  100% { opacity: 0.97; }
+}
+
+.crt-flicker {
+  animation: crtFlicker 0.15s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-flicker {
+    animation: none !important;
+  }
+}
+
+/* Terminal Screen Vignette */
+.crt-vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0,0,0,0) 65%,
+    rgba(74, 59, 82, 0.28) 100%
+  );
+}
+
+/* Typography Helpers */
+h1, h2, h3, h4, .pixel-heading {
+  font-family: var(--font-heading);
+  font-weight: normal;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
+
+.font-pixel {
+  font-family: var(--font-heading);
+}
+
+.font-data {
+  font-family: var(--font-data);
+}
+
+.text-mint { color: var(--healthy-mint) !important; }
+.text-peach { color: var(--panel-peach) !important; }
+.text-coral { color: var(--alert-coral) !important; }
+.text-purple { color: var(--deep-purple) !important; }
+.text-dim { color: var(--text-dim) !important; }
+.text-bright { color: var(--text-bright) !important; }
+
+/* Selection */
+::selection {
+  background: var(--deep-purple);
+  color: var(--healthy-mint);
+}

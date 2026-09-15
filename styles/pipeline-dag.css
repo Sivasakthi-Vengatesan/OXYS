@@ -1,0 +1,194 @@
+/* ==========================================================================
+   STREAMPULSE - PIPELINE DAG & KINETIC DATA FLOW VISUALIZATION
+   ========================================================================== */
+
+.pipeline-dag-container {
+  background: var(--term-dark);
+  border: 4px solid var(--deep-purple);
+  box-shadow: var(--shadow-double);
+  padding: 24px;
+  position: relative;
+  overflow-x: auto;
+}
+
+.pipeline-dag-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  border-bottom: 2px dashed var(--deep-purple);
+  padding-bottom: 12px;
+}
+
+.dag-title {
+  color: var(--panel-peach);
+  font-family: var(--font-heading);
+  font-size: 11px;
+}
+
+.dag-status-pill {
+  background: var(--deep-purple);
+  color: var(--healthy-mint);
+  border: 1px solid var(--healthy-mint);
+  padding: 2px 8px;
+  font-family: var(--font-heading);
+  font-size: 9px;
+}
+
+/* Pipeline Flow Flex / Grid Layout */
+.pipeline-dag-flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: relative;
+  min-width: 820px;
+}
+
+/* Individual DAG Node Box */
+.dag-node {
+  background: var(--panel-peach);
+  border: 3px solid var(--deep-purple);
+  padding: 12px;
+  width: 180px;
+  box-shadow: 4px 4px 0 var(--deep-purple);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s, background-color 0.15s;
+  user-select: none;
+  position: relative;
+}
+
+.dag-node:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--alert-coral);
+  background: #fff;
+}
+
+.dag-node:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--deep-purple);
+}
+
+.dag-node.active-focus {
+  border-color: var(--healthy-mint);
+  box-shadow: 0 0 0 2px var(--healthy-mint), 4px 4px 0 var(--deep-purple);
+}
+
+.dag-node.node-poison {
+  background: var(--alert-coral);
+  border-color: var(--deep-purple);
+}
+.dag-node.node-clean {
+  background: var(--healthy-mint);
+}
+
+.dag-node-type {
+  font-family: var(--font-heading);
+  font-size: 9px;
+  color: var(--deep-purple);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dag-node-name {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  color: var(--deep-purple);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.dag-node-stat {
+  font-family: var(--font-data);
+  font-size: 18px;
+  color: var(--deep-purple);
+  margin-top: 6px;
+  border-top: 1px dashed var(--deep-purple);
+  padding-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Branching Container for CLEAN vs POISON */
+.dag-branch-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+/* Connector Pipes with Animated Packets */
+.dag-connector {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-width: 48px;
+}
+
+.connector-line {
+  width: 100%;
+  height: 4px;
+  background: var(--deep-purple);
+  position: relative;
+}
+
+.connector-packet {
+  position: absolute;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  background: var(--healthy-mint);
+  border: 2px solid var(--deep-purple);
+  animation: streamPacket 2s linear infinite;
+}
+
+.connector-packet.poison-packet {
+  background: var(--alert-coral);
+  animation: streamPacketBranch 1.8s linear infinite;
+}
+
+@keyframes streamPacket {
+  0% { left: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: 95%; opacity: 0; }
+}
+
+@keyframes streamPacketBranch {
+  0% { left: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: 95%; opacity: 0; }
+}
+
+/* Branch split connector ASCII / CSS */
+.dag-split-connector {
+  width: 32px;
+  height: 140px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dag-split-line-top, .dag-split-line-bottom {
+  width: 100%;
+  height: 4px;
+  background: var(--deep-purple);
+}
+
+.dag-split-stem {
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 4px;
+  background: var(--deep-purple);
+}

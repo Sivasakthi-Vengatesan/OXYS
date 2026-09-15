@@ -1,0 +1,498 @@
+/* ==========================================================================
+   STREAMPULSE - SUBSYSTEM SPECIFIC STYLES
+   ========================================================================== */
+
+/* Subsystem View Container (Tab-switched) */
+.subsystem-view {
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.subsystem-view.active-view {
+  display: flex;
+}
+
+/* 1. CONTROL CENTER */
+.control-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.control-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel-peach);
+  border: 3px solid var(--deep-purple);
+  padding: 12px 16px;
+  box-shadow: var(--shadow-primary);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* 2. STREAMS SUBSYSTEM */
+.stream-inspector-drawer {
+  background: var(--panel-peach);
+  border: 4px solid var(--deep-purple);
+  padding: 16px;
+  box-shadow: var(--shadow-double);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.stream-part-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 2px solid var(--deep-purple);
+  background: var(--bg-lavender);
+  padding: 8px;
+}
+
+.part-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: var(--panel-peach);
+  border: 1px solid var(--deep-purple);
+  font-family: var(--font-data);
+  font-size: 18px;
+}
+
+/* 3. PIPELINES SUBSYSTEM */
+.pipelines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.pipeline-card {
+  background: var(--panel-peach);
+  border: 4px solid var(--deep-purple);
+  box-shadow: var(--shadow-double);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 4. GUARDS SUBSYSTEM & INDIVIDUAL GUARD VIEWS */
+.guards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.guard-card {
+  background: var(--panel-peach);
+  border: 4px solid var(--deep-purple);
+  box-shadow: var(--shadow-double);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.guard-card.breached {
+  background: var(--alert-coral);
+  animation: pulseGuardBreach 1.2s infinite alternate;
+}
+
+@keyframes pulseGuardBreach {
+  0% { border-color: var(--deep-purple); }
+  100% { border-color: #ffffff; }
+}
+
+.guard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--deep-purple);
+  padding-bottom: 8px;
+}
+
+.guard-meter-track {
+  width: 100%;
+  height: 14px;
+  background: var(--bg-lavender);
+  border: 2px solid var(--deep-purple);
+  position: relative;
+  overflow: hidden;
+}
+
+.guard-meter-fill {
+  height: 100%;
+  background: var(--healthy-mint);
+  transition: width 0.3s ease;
+}
+
+.guard-meter-fill.fill-breached {
+  background: var(--alert-coral);
+}
+
+.guard-meter-threshold-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--deep-purple);
+  z-index: 2;
+}
+
+/* SCHEMA GUARD COMPARISON TABLE */
+.schema-diff-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+@media (max-width: 800px) {
+  .schema-diff-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.schema-box {
+  background: var(--term-dark);
+  color: var(--healthy-mint);
+  border: 3px solid var(--deep-purple);
+  padding: 14px;
+  font-family: var(--font-data);
+}
+
+.schema-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.15);
+}
+
+.field-missing {
+  color: var(--alert-coral);
+  font-weight: bold;
+}
+.field-unexpected {
+  color: var(--panel-peach);
+  font-weight: bold;
+}
+
+/* 5. CIRCUIT BREAKER SUBSYSTEM */
+.circuit-state-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 850px) {
+  .circuit-state-display {
+    grid-template-columns: 1fr;
+  }
+}
+
+.circuit-state-machine {
+  background: var(--panel-peach);
+  border: 4px solid var(--deep-purple);
+  padding: 20px;
+  box-shadow: var(--shadow-double);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fsm-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 2px solid var(--deep-purple);
+  background: var(--bg-lavender);
+  font-family: var(--font-heading);
+  font-size: 11px;
+  color: var(--deep-purple);
+  transition: all 0.2s ease;
+}
+
+.fsm-step.active-step {
+  background: var(--deep-purple);
+  color: var(--healthy-mint);
+  box-shadow: 4px 4px 0 var(--alert-coral);
+  transform: translateX(6px);
+}
+
+.fsm-step.active-step.step-danger {
+  color: var(--alert-coral);
+}
+
+.fsm-step-arrow {
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  color: var(--deep-purple);
+}
+
+.circuit-live-panel {
+  background: var(--bg-lavender);
+  border: 4px solid var(--deep-purple);
+  padding: 20px;
+  box-shadow: var(--shadow-double);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.circuit-huge-state {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  padding: 16px;
+  border: 3px solid var(--deep-purple);
+  text-align: center;
+  background: var(--healthy-mint);
+  color: var(--deep-purple);
+}
+
+.circuit-huge-state.state-open {
+  background: var(--alert-coral);
+  color: var(--deep-purple);
+  animation: stateBlink 0.8s steps(1) infinite;
+}
+
+@keyframes stateBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.8; }
+}
+
+/* 6. QUARANTINE SUBSYSTEM */
+.quarantine-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.json-payload-viewer {
+  background: var(--term-dark);
+  color: var(--healthy-mint);
+  border: 2px solid var(--deep-purple);
+  padding: 14px;
+  font-family: var(--font-data);
+  font-size: 18px;
+  max-height: 240px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+/* 7. RECOVERY SUBSYSTEM */
+.recovery-dag-sequence {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 20px;
+  background: var(--panel-peach);
+  border: 4px solid var(--deep-purple);
+  box-shadow: var(--shadow-double);
+}
+
+.recovery-node {
+  padding: 12px;
+  border: 2px solid var(--deep-purple);
+  background: var(--bg-lavender);
+  font-family: var(--font-heading);
+  font-size: 10px;
+  min-width: 140px;
+  text-align: center;
+  box-shadow: 2px 2px 0 var(--deep-purple);
+}
+
+.recovery-node.node-valid {
+  background: var(--healthy-mint);
+}
+
+.recovery-node.node-poison {
+  background: var(--alert-coral);
+}
+
+.recovery-node.node-active-checkpoint {
+  border-color: var(--deep-purple);
+  background: var(--deep-purple);
+  color: var(--healthy-mint);
+  box-shadow: 4px 4px 0 var(--alert-coral);
+}
+
+/* 8. eBPF TELEMETRY SUBSYSTEM */
+.telemetry-split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 850px) {
+  .telemetry-split-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.telemetry-panel {
+  background: var(--panel-peach);
+  border: 4px solid var(--deep-purple);
+  padding: 16px;
+  box-shadow: var(--shadow-double);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.telemetry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px dashed var(--deep-purple);
+  padding-bottom: 6px;
+  font-family: var(--font-data);
+  font-size: 22px;
+}
+
+/* 9. EVENTS FILTERING SUBSYSTEM */
+.events-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--panel-peach);
+  border: 3px solid var(--deep-purple);
+}
+
+.filter-btn {
+  background: var(--bg-lavender);
+  border: 2px solid var(--deep-purple);
+  padding: 4px 8px;
+  font-family: var(--font-heading);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.filter-btn.active {
+  background: var(--deep-purple);
+  color: var(--healthy-mint);
+}
+
+/* 10. POLICIES & CONFIGURATION FORM */
+.policy-config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.policy-card {
+  background: var(--panel-peach);
+  border: 3px solid var(--deep-purple);
+  padding: 14px;
+  box-shadow: var(--shadow-primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.policy-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.policy-input-field {
+  flex: 1;
+  background: var(--bg-lavender);
+  border: 2px solid var(--deep-purple);
+  padding: 6px 10px;
+  font-family: var(--font-data);
+  font-size: 20px;
+  color: var(--deep-purple);
+  outline: none;
+}
+
+/* 11. PERSISTENT EVENT TERMINAL / CLI DRAWER */
+.event-terminal-dock {
+  background: var(--term-dark);
+  border: 4px solid var(--deep-purple);
+  box-shadow: var(--shadow-double);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.event-terminal-body {
+  padding: 12px 16px;
+  height: 180px;
+  overflow-y: auto;
+  font-family: var(--font-data);
+  font-size: 19px;
+  color: var(--healthy-mint);
+  line-height: 1.35;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.terminal-log-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.terminal-log-time {
+  color: var(--text-dim);
+  user-select: none;
+}
+
+.terminal-log-tag {
+  background: var(--deep-purple);
+  color: var(--panel-peach);
+  padding: 0 4px;
+  font-size: 15px;
+  font-family: var(--font-heading);
+}
+
+.terminal-log-tag.tag-healthy { color: var(--healthy-mint); }
+.terminal-log-tag.tag-alert { color: var(--alert-coral); }
+.terminal-log-tag.tag-info { color: var(--panel-peach); }
+.terminal-log-tag.tag-config { color: #88c0d0; }
+
+.terminal-cli-input-row {
+  display: flex;
+  align-items: center;
+  border-top: 2px solid var(--deep-purple);
+  background: #1e1324;
+  padding: 6px 12px;
+  gap: 8px;
+}
+
+.cli-prompt-symbol {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  color: var(--healthy-mint);
+}
+
+.cli-input-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-family: var(--font-data);
+  font-size: 20px;
+  outline: none;
+}

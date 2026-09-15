@@ -1,0 +1,351 @@
+/* ==========================================================================
+   STREAMPULSE - 80s PASTEL TERMINAL COMPONENTS
+   ========================================================================== */
+
+/* 1. TERMINAL SYSTEM WINDOW */
+.terminal-window {
+  background: var(--bg-lavender);
+  border: 4px solid var(--deep-purple);
+  box-shadow: var(--shadow-double);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.terminal-window-header {
+  background: var(--deep-purple);
+  color: var(--healthy-mint);
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  border-bottom: 2px solid var(--deep-purple);
+}
+
+.terminal-window-title {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.terminal-window-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.win-ctrl-btn {
+  background: var(--panel-peach);
+  color: var(--deep-purple);
+  border: 1px solid var(--deep-purple);
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 9px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.win-ctrl-btn:hover {
+  background: var(--alert-coral);
+}
+
+.win-ctrl-btn:active {
+  transform: translateY(1px);
+}
+
+.terminal-window-body {
+  padding: 16px;
+  background: var(--bg-lavender);
+  color: var(--deep-purple);
+}
+
+.terminal-window-body.dark-inset {
+  background: var(--term-dark);
+  color: var(--healthy-mint);
+  border-top: 2px solid var(--deep-purple);
+  font-family: var(--font-data);
+}
+
+/* 2. BRUTALIST ACTIVE BUTTON */
+.btn-brutalist {
+  background: var(--panel-peach);
+  color: var(--deep-purple);
+  border: 2px solid var(--deep-purple);
+  box-shadow: 0 6px 0 var(--alert-coral);
+  padding: 10px 18px;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  user-select: none;
+  transition: transform 0.05s, box-shadow 0.05s, background 0.1s;
+  text-transform: uppercase;
+}
+
+.btn-brutalist:hover {
+  background: #ffe3b3;
+}
+
+.btn-brutalist:active, .btn-brutalist.is-pressed {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--alert-coral);
+}
+
+.btn-brutalist.btn-mint {
+  background: var(--healthy-mint);
+  box-shadow: 0 6px 0 var(--deep-purple);
+}
+.btn-brutalist.btn-mint:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--deep-purple);
+}
+
+.btn-brutalist.btn-coral {
+  background: var(--alert-coral);
+  color: var(--deep-purple);
+  box-shadow: 0 6px 0 var(--deep-purple);
+}
+.btn-brutalist.btn-coral:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--deep-purple);
+}
+
+.btn-brutalist.btn-dark {
+  background: var(--deep-purple);
+  color: var(--healthy-mint);
+  box-shadow: 0 6px 0 var(--alert-coral);
+}
+.btn-brutalist.btn-dark:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--alert-coral);
+}
+
+.btn-sm {
+  padding: 6px 10px;
+  font-size: 10px;
+  box-shadow: 0 4px 0 var(--alert-coral);
+}
+.btn-sm:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--alert-coral);
+}
+
+/* 3. DOUBLE-SHADOW CARDS */
+.card-double-shadow {
+  border: 4px solid var(--deep-purple);
+  background: var(--panel-peach);
+  box-shadow: var(--shadow-double);
+  padding: 16px;
+  position: relative;
+}
+
+.card-mint {
+  background: var(--healthy-mint);
+}
+
+.card-coral {
+  background: var(--alert-coral);
+}
+
+.card-lavender {
+  background: var(--bg-lavender);
+}
+
+/* 4. TECHNICAL METRIC READOUT BOX */
+.metric-stat-box {
+  background: var(--panel-peach);
+  border: 3px solid var(--deep-purple);
+  padding: 12px 14px;
+  box-shadow: 3px 3px 0 var(--deep-purple);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.metric-stat-label {
+  font-family: var(--font-heading);
+  font-size: 9px;
+  color: var(--deep-purple);
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  opacity: 0.9;
+}
+
+.metric-stat-value {
+  font-family: var(--font-data);
+  font-size: 42px;
+  line-height: 1;
+  color: var(--deep-purple);
+  font-weight: bold;
+}
+
+.metric-stat-sub {
+  font-family: var(--font-data);
+  font-size: 15px;
+  color: var(--deep-purple);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 5. STATUS PILLS & BADGES */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  font-family: var(--font-heading);
+  font-size: 9px;
+  border: 2px solid var(--deep-purple);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.badge-mint, .status-healthy {
+  background: var(--healthy-mint);
+  color: var(--deep-purple);
+}
+
+.badge-peach, .status-active {
+  background: var(--panel-peach);
+  color: var(--deep-purple);
+}
+
+.badge-coral, .status-alert, .status-quarantine {
+  background: var(--alert-coral);
+  color: var(--deep-purple);
+}
+
+.badge-purple, .status-system {
+  background: var(--deep-purple);
+  color: var(--healthy-mint);
+}
+
+/* 6. TECHNICAL DATA TABLES */
+.terminal-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 2px solid var(--deep-purple);
+  background: var(--panel-peach);
+}
+
+.terminal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-data);
+  font-size: 20px;
+  text-align: left;
+}
+
+.terminal-table th {
+  background: var(--deep-purple);
+  color: var(--panel-peach);
+  font-family: var(--font-heading);
+  font-size: 10px;
+  padding: 10px 12px;
+  letter-spacing: 1px;
+  border-bottom: 2px solid var(--deep-purple);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.terminal-table td {
+  padding: 8px 12px;
+  border-bottom: 1px dashed var(--deep-purple);
+  border-right: 1px dashed rgba(74, 59, 82, 0.3);
+  color: var(--deep-purple);
+  vertical-align: middle;
+}
+
+.terminal-table tr:hover td {
+  background: rgba(168, 230, 207, 0.4);
+}
+
+.terminal-table tr.row-selected td {
+  background: var(--healthy-mint);
+}
+
+.terminal-table tr.row-alert td {
+  background: rgba(255, 184, 161, 0.4);
+}
+
+/* 7. SYSTEM ALERT DIALOG / INCIDENT BANNER */
+.incident-alert-banner {
+  background: var(--alert-coral);
+  border: 4px solid var(--deep-purple);
+  box-shadow: var(--shadow-double);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  animation: alertPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes alertPulse {
+  0% { box-shadow: 4px 4px 0 var(--deep-purple), 8px 8px 0 var(--alert-coral); }
+  100% { box-shadow: 4px 4px 0 var(--deep-purple), 10px 10px 0 var(--deep-purple); }
+}
+
+.alert-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.alert-tag {
+  background: var(--deep-purple);
+  color: var(--alert-coral);
+  padding: 4px 8px;
+  font-family: var(--font-heading);
+  font-size: 11px;
+}
+
+.alert-message {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  color: var(--deep-purple);
+}
+
+/* 8. MODAL WINDOW SYSTEM */
+.terminal-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(45, 31, 53, 0.7);
+  backdrop-filter: none; /* No glassmorphism */
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.terminal-modal-backdrop.hidden {
+  display: none !important;
+}
+
+.terminal-modal-box {
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg-lavender);
+  border: 4px solid var(--deep-purple);
+  box-shadow: 8px 8px 0 var(--deep-purple), 14px 14px 0 var(--alert-coral);
+}
