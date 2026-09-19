@@ -123,15 +123,7 @@ class DatabaseManager:
 
         default_url = "sqlite:///./oxys.db"
         if is_serverless:
-            tmp_db_path = os.path.join(tempfile.gettempdir(), "oxys.db")
-            local_seed = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "oxys.db"))
-            if os.path.exists(local_seed) and not os.path.exists(tmp_db_path):
-                try:
-                    import shutil
-                    shutil.copyfile(local_seed, tmp_db_path)
-                except Exception:
-                    pass
-            default_url = f"sqlite:///{tmp_db_path}"
+            default_url = f"sqlite:///{os.path.join(tempfile.gettempdir(), 'oxys.db')}"
 
         raw_url = db_url or os.getenv("DATABASE_URL", os.getenv("POSTGRES_URL", default_url))
         
