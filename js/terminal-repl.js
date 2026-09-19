@@ -1,5 +1,5 @@
 /* ==========================================================================
-   STREAMPULSE - RETRO TERMINAL CLI COMMAND INTERPRETER
+   OXYS - RETRO TERMINAL CLI COMMAND INTERPRETER
    ========================================================================== */
 
 class TerminalReplController {

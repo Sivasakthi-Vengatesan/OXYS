@@ -1,5 +1,5 @@
 /* ==========================================================================
-   STREAMPULSE - 80s PASTEL TERMINAL COMPONENTS
+   OXYS - 80s PASTEL TERMINAL COMPONENTS
    ========================================================================== */
 
 /* 1. TERMINAL SYSTEM WINDOW */
@@ -80,19 +80,20 @@
   background: var(--panel-peach);
   color: var(--deep-purple);
   border: 2px solid var(--deep-purple);
-  box-shadow: 0 6px 0 var(--alert-coral);
-  padding: 10px 18px;
+  box-shadow: 2px 2px 0 var(--deep-purple);
+  padding: 6px 14px;
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: 10px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   text-decoration: none;
   user-select: none;
   transition: transform 0.05s, box-shadow 0.05s, background 0.1s;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .btn-brutalist:hover {
@@ -100,55 +101,56 @@
 }
 
 .btn-brutalist:active, .btn-brutalist.is-pressed {
-  transform: translateY(4px);
-  box-shadow: 0 2px 0 var(--alert-coral);
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 var(--deep-purple);
 }
 
 .btn-brutalist.btn-mint {
   background: var(--healthy-mint);
-  box-shadow: 0 6px 0 var(--deep-purple);
+  color: var(--deep-purple);
+  box-shadow: 2px 2px 0 var(--deep-purple);
 }
 .btn-brutalist.btn-mint:active {
-  transform: translateY(4px);
-  box-shadow: 0 2px 0 var(--deep-purple);
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 var(--deep-purple);
 }
 
 .btn-brutalist.btn-coral {
   background: var(--alert-coral);
   color: var(--deep-purple);
-  box-shadow: 0 6px 0 var(--deep-purple);
+  box-shadow: 2px 2px 0 var(--deep-purple);
 }
 .btn-brutalist.btn-coral:active {
-  transform: translateY(4px);
-  box-shadow: 0 2px 0 var(--deep-purple);
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 var(--deep-purple);
 }
 
 .btn-brutalist.btn-dark {
   background: var(--deep-purple);
   color: var(--healthy-mint);
-  box-shadow: 0 6px 0 var(--alert-coral);
+  box-shadow: 2px 2px 0 var(--alert-coral);
 }
 .btn-brutalist.btn-dark:active {
-  transform: translateY(4px);
-  box-shadow: 0 2px 0 var(--alert-coral);
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 var(--alert-coral);
 }
 
 .btn-sm {
-  padding: 6px 10px;
-  font-size: 10px;
-  box-shadow: 0 4px 0 var(--alert-coral);
+  padding: 4px 8px;
+  font-size: 9px;
+  box-shadow: 2px 2px 0 var(--deep-purple);
 }
 .btn-sm:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 var(--alert-coral);
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 var(--deep-purple);
 }
 
 /* 3. DOUBLE-SHADOW CARDS */
 .card-double-shadow {
-  border: 4px solid var(--deep-purple);
+  border: 3px solid var(--deep-purple);
   background: var(--panel-peach);
-  box-shadow: var(--shadow-double);
-  padding: 16px;
+  box-shadow: 3px 3px 0 var(--deep-purple);
+  padding: 14px;
   position: relative;
 }
 
@@ -168,51 +170,58 @@
 .metric-stat-box {
   background: var(--panel-peach);
   border: 3px solid var(--deep-purple);
-  padding: 12px 14px;
+  padding: 10px 12px;
   box-shadow: 3px 3px 0 var(--deep-purple);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-height: 96px;
 }
 
 .metric-stat-label {
   font-family: var(--font-heading);
-  font-size: 9px;
+  font-size: 8px;
   color: var(--deep-purple);
   letter-spacing: 0.5px;
-  margin-bottom: 6px;
-  opacity: 0.9;
+  margin-bottom: 2px;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .metric-stat-value {
-  font-family: var(--font-data);
-  font-size: 42px;
-  line-height: 1;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  line-height: 1.1;
   color: var(--deep-purple);
   font-weight: bold;
+  margin: 4px 0;
 }
 
 .metric-stat-sub {
   font-family: var(--font-data);
-  font-size: 15px;
+  font-size: 14px;
   color: var(--deep-purple);
-  margin-top: 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-top: 1px dashed rgba(74, 59, 82, 0.3);
+  padding-top: 4px;
 }
 
 /* 5. STATUS PILLS & BADGES */
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
+  gap: 4px;
+  padding: 2px 6px;
   font-family: var(--font-heading);
-  font-size: 9px;
-  border: 2px solid var(--deep-purple);
+  font-size: 8px;
+  border: 1px solid var(--deep-purple);
   line-height: 1;
   white-space: nowrap;
+  text-transform: uppercase;
 }
 
 .badge-mint, .status-healthy {
@@ -285,39 +294,38 @@
 /* 7. SYSTEM ALERT DIALOG / INCIDENT BANNER */
 .incident-alert-banner {
   background: var(--alert-coral);
-  border: 4px solid var(--deep-purple);
-  box-shadow: var(--shadow-double);
-  padding: 14px 18px;
+  border: 3px solid var(--deep-purple);
+  box-shadow: 3px 3px 0 var(--deep-purple);
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  animation: alertPulse 1s ease-in-out infinite alternate;
-}
-
-@keyframes alertPulse {
-  0% { box-shadow: 4px 4px 0 var(--deep-purple), 8px 8px 0 var(--alert-coral); }
-  100% { box-shadow: 4px 4px 0 var(--deep-purple), 10px 10px 0 var(--deep-purple); }
+  gap: 12px;
 }
 
 .alert-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .alert-tag {
   background: var(--deep-purple);
   color: var(--alert-coral);
-  padding: 4px 8px;
+  padding: 3px 6px;
   font-family: var(--font-heading);
-  font-size: 11px;
+  font-size: 9px;
+  white-space: nowrap;
 }
 
 .alert-message {
   font-family: var(--font-heading);
-  font-size: 11px;
+  font-size: 9.5px;
+  line-height: 1.2;
   color: var(--deep-purple);
+  word-break: break-word;
 }
 
 /* 8. MODAL WINDOW SYSTEM */

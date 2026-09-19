@@ -67,3 +67,7 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local DB & Storage
+*.db
+.oxys_storage/

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STREAMPULSE // Reactive Real-Time Data Reliability Engine</title>
-  <meta name="description" content="StreamPulse is a reactive real-time data reliability and containment engine for streaming pipelines (Kafka, Spark, MinIO, eBPF).">
+  <title>OXYS // Real-Time Integrity Protection for Streaming Data</title>
+  <meta name="description" content="OXYS is a real-time streaming data integrity and anomaly protection system (External Ingestion, Kafka, Spark Structured Streaming, Detection Engine, PostgreSQL, MinIO, FastAPI).">
 
   <!-- Fonts & Base Stylesheets -->
   <link rel="stylesheet" href="styles/terminal-base.css">
@@ -29,7 +29,7 @@
       </div>
 
       <div class="window-bar-title">
-        STREAMPULSE // CONTROL TERMINAL
+        OXYS // CONTROL TERMINAL
       </div>
 
       <div class="window-bar-status">
@@ -66,34 +66,34 @@
         <section class="landing-hero-section">
           
           <div class="hero-pixel-accents" aria-hidden="true">
-            ☁ ☼ ☁
+            <img src="assets/oxys-mascot.svg" alt="OXYS Mascot" style="width: 64px; height: 56px; image-rendering: pixelated; margin-bottom: 8px;" />
           </div>
 
           <h1 class="hero-large-title">
-            STREAM<br>PULSE
+            OXYS
           </h1>
 
           <div class="hero-engine-badge">
-            [ REACTIVE_DATA_RELIABILITY_ENGINE ]
+            [ REAL-TIME_DATA_INTEGRITY_&_ANOMALY_PROTECTION ]
           </div>
 
           <div class="hero-tagline">
-            "DETECT THE DRIFT. CONTAIN THE FAILURE. KEEP THE STREAM ALIVE."
+            "REAL-TIME INTEGRITY PROTECTION FOR STREAMING DATA."
           </div>
 
           <div class="hero-subtext">
-            Reactive reliability for real-time data pipelines.<br>
-            Detect anomalous data, contain poisoned batches, and recover streaming pipelines safely.
+            End-to-end real-time stream protection across distributed event architectures.<br>
+            Real data ingestion → Kafka → Spark Structured Streaming → OXYS Detection Engine → ALLOW / QUARANTINE / BLOCK.
           </div>
 
           <div class="hero-cta-group">
             <a href="/app" class="btn-hero-primary" id="btn-init-session">
               <span>▶</span>
-              <span>[ INIT_SESSION ]</span>
+              <span>[ INIT_OPERATOR_CONSOLE ]</span>
             </a>
 
             <button class="btn-hero-secondary" id="btn-read-logs" onclick="document.getElementById('system-log').scrollIntoView({ behavior: 'smooth' })">
-              <span>[ READ_LOGS.EXE ]</span>
+              <span>[ READ_BOOT_LOGS.EXE ]</span>
             </button>
           </div>
 
@@ -104,7 +104,7 @@
              ========================================== -->
         <section class="landing-features-section">
           <div class="section-label-banner">
-            <span class="section-title">CORE_SUBSYSTEMS // RELIABILITY ARCHITECTURE</span>
+            <span class="section-title">CORE_SUBSYSTEMS // REAL-TIME PROTECTION ENGINE</span>
             <span class="status-badge badge-mint">3 ACTIVE DEFENSES</span>
           </div>
 
@@ -114,14 +114,14 @@
             <div class="feature-brutalist-card">
               <div class="card-top-row">
                 <span class="card-title">DATA_GUARDS</span>
-                <span class="status-badge badge-peach">[ 05 GUARDS ]</span>
+                <span class="status-badge badge-peach">[ 05 DETECTORS ]</span>
               </div>
               <p class="card-body-text">
-                Monitor schema drift, null rates, cardinality, distribution and volume before unhealthy data reaches downstream systems.
+                Real-time assertions for schema drift, null-rate spikes, cardinality collapse, Z-score distribution drift, and duplicate integrity.
               </p>
               <div class="card-mini-terminal">
                 > ASSERTION ENGINE: INLINE<br>
-                > LATENCY OVERHEAD: 1.4ms<br>
+                > LATENCY OVERHEAD: 1.2ms<br>
                 > STATUS: ACTIVE
               </div>
             </div>
@@ -133,14 +133,14 @@
                 <span class="status-badge badge-coral">AUTO-CONTAIN</span>
               </div>
               <p class="card-body-text">
-                Automatically isolate unhealthy stream processing when reliability thresholds are breached.
+                Kinetic finite-state machine (ALLOW / QUARANTINE / BLOCK) halts downstream contamination upon anomaly breach.
               </p>
               <div class="card-flow-diagram">
                 CLOSED → OPEN → QUARANTINE
               </div>
               <div class="card-mini-terminal">
                 > CIRCUIT_STATE<br>
-                &nbsp;&nbsp;CLOSED
+                &nbsp;&nbsp;CLOSED (NOMINAL)
               </div>
             </div>
 
@@ -151,14 +151,14 @@
                 <span class="status-badge badge-purple">VAULT STORAGE</span>
               </div>
               <p class="card-body-text">
-                Separate poisoned batches from healthy data while the stream continues processing safely.
+                Isolates poisoned micro-batches to immutable MinIO S3 & PostgreSQL vaults while preserving continuous stream uptime.
               </p>
               <div class="card-flow-diagram">
                 POISON_BATCH<br>
                 ↓<br>
-                QUARANTINE<br>
+                QUARANTINE_VAULT<br>
                 ↓<br>
-                MINIO_DLT
+                MINIO_S3 + POSTGRES
               </div>
             </div>
 
@@ -176,18 +176,18 @@
 
           <div class="log-terminal-window">
             <div class="log-terminal-header">
-              <span>TERMINAL // STREAMPULSE_BOOT.LOG</span>
+              <span>TERMINAL // OXYS_BOOT.LOG</span>
               <span>[ UTF-8 ]</span>
             </div>
             <div class="log-terminal-content">
-              <div class="log-line-boot">[BOOT] STREAMPULSE INITIALIZING...</div>
-              <div class="log-line-ok">[OK] KAFKA CONNECTION READY (4 Topics / 42 Partitions)</div>
-              <div class="log-line-ok">[OK] SPARK STREAM READY (Micro-Batch 500ms Interval)</div>
-              <div class="log-line-ok">[OK] DATA GUARDS LOADED (Schema, Null Rate, Entropy, Z-Score, Volume)</div>
-              <div class="log-line-ok">[OK] CIRCUIT BREAKER ARMED (Automated Trip & Isolation)</div>
-              <div class="log-line-ok">[OK] QUARANTINE STORAGE READY (s3://streampulse-quarantine/)</div>
-              <div class="log-line-ok">[OK] RECOVERY ENGINE READY (Checkpoint-Aware Rollback cp_00482)</div>
-              <div class="log-line-ready">STREAMPULSE READY.</div>
+              <div class="log-line-boot">[BOOT] OXYS INTEGRITY PROTECTION ENGINE INITIALIZING...</div>
+              <div class="log-line-ok">[OK] REAL DATA SOURCES CONNECTED (Binance Crypto & Open-Meteo)</div>
+              <div class="log-line-ok">[OK] KAFKA TOPICS INITIALIZED (oxys.raw, oxys.normalized, oxys.quarantine)</div>
+              <div class="log-line-ok">[OK] SPARK STRUCTURED STREAMING RUNNER ARMED</div>
+              <div class="log-line-ok">[OK] OXYS DETECTION GUARDS ACTIVE (Schema, Null Rate, Entropy, Z-Score, Duplicate)</div>
+              <div class="log-line-ok">[OK] CIRCUIT BREAKER FSM ARMED (ALLOW / QUARANTINE / BLOCK)</div>
+              <div class="log-line-ok">[OK] DATABASE & MINIO STORAGE CONNECTED (s3://oxys-quarantine/)</div>
+              <div class="log-line-ready">OXYS READY. REAL-TIME PROTECTION ACTIVE.</div>
             </div>
           </div>
         </section>
@@ -203,36 +203,40 @@
 
           <div class="pipeline-diagram-box">
             <div class="ascii-pipeline-flow">
-KAFKA
+REAL DATA SOURCE (Crypto / Weather)
   ↓
-SPARK
+INGESTION ADAPTER (Normalization)
   ↓
-STREAMPULSE_GUARD
+KAFKA (oxys.normalized)
   ↓
-DECISION
- ↙        ↘
-CLEAN     POISON
- ↓          ↓
-SINK     QUARANTINE
+SPARK STRUCTURED STREAMING
+  ↓
+OXYS DETECTION ENGINE
+  ↓
+DECISION MATRIX
+ ↙         ↓           ↘
+ALLOW   QUARANTINE    BLOCK
+ ↓         ↓           ↓
+SINK     MINIO/PG    REJECT
             </div>
           </div>
         </section>
 
         <!-- ==========================================
-             5. WHY STREAMPULSE
+             5. WHY OXYS
              ========================================== -->
         <section class="why-exists-section">
           <div class="section-label-banner">
-            <span class="section-title">WHY_THIS_EXISTS // THE RELIABILITY GAP</span>
+            <span class="section-title">WHY_OXYS // THE STREAMING INTEGRITY GAP</span>
           </div>
 
           <div class="why-exists-card">
-            <div class="why-exists-title">THE STREAMING PROBLEM:</div>
+            <div class="why-exists-title">THE REAL-TIME INTEGRITY CHALLENGE:</div>
             <p class="why-exists-text">
-              "Traditional streaming pipelines can continue processing even when incoming data becomes corrupted, malformed, or statistically abnormal."
+              "Traditional event brokers blindly forward corrupt schemas, poisoned records, and distribution spikes into analytical lakehouses and downstream workers."
             </p>
             <p class="why-exists-text" style="font-weight: bold;">
-              "StreamPulse detects the breach, contains the unhealthy batch, and provides a controlled recovery path."
+              "OXYS sits inline: asserting data invariants sub-millisecond, isolating poison batches into MinIO vaults, and keeping mission-critical pipelines alive."
             </p>
           </div>
         </section>
@@ -251,7 +255,7 @@ SINK     QUARANTINE
 
           <a href="/app" class="btn-hero-primary" style="margin-top: 10px;">
             <span>▶</span>
-            <span>[ INIT_SESSION ]</span>
+            <span>[ INIT_OPERATOR_CONSOLE ]</span>
           </a>
         </section>
 
@@ -271,13 +275,13 @@ SINK     QUARANTINE
     <!-- LANDING FOOTER -->
     <footer class="landing-footer">
       <div>
-        <strong>STREAMPULSE v0.1</strong> — REACTIVE DATA RELIABILITY ENGINE
+        <strong>OXYS v2.0</strong> — REAL-TIME DATA INTEGRITY & ANOMALY PROTECTION
       </div>
       <div>
-        <span>KAFKA</span> / <span>SPARK</span> / <span>MINIO</span> / <span>eBPF</span>
+        <span>KAFKA</span> / <span>SPARK</span> / <span>POSTGRESQL</span> / <span>MINIO</span> / <span>FASTAPI</span>
       </div>
       <div>
-        SYSTEM_STATUS: <strong>READY</strong>
+        SYSTEM_STATUS: <strong>ONLINE</strong>
       </div>
     </footer>
 

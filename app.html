@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STREAMPULSE // 80s Real-Time Data Reliability & Containment Console</title>
-  <meta name="description" content="Nostalgic 80s pastel terminal control console for StreamPulse data reliability, quarantine, Kafka streams, Spark Structured Streaming, and eBPF telemetry engine.">
+  <title>OXYS // Real-Time Data Integrity & Anomaly Protection Console</title>
+  <meta name="description" content="Pastel brutalist terminal control console for OXYS streaming data integrity, quarantine, Kafka, Spark Structured Streaming, and PostgreSQL/MinIO engine.">
   
   <!-- CSS Stylesheets -->
   <link rel="stylesheet" href="styles/terminal-base.css">
@@ -25,11 +25,13 @@
     <header class="top-system-bar" id="top-system-bar">
       <div class="system-logo-group">
         <div class="logo-box-outer">
-          <div class="logo-box-inner">SP</div>
+          <div class="logo-box-inner">
+            <img src="assets/oxys-mascot.svg" alt="OXYS Mascot" class="logo-mascot-img" />
+          </div>
         </div>
         <div class="brand-info">
-          <div class="brand-title">STREAMPULSE</div>
-          <div class="brand-subtitle">STREAM RELIABILITY ENGINE</div>
+          <div class="brand-title">OXYS</div>
+          <div class="brand-subtitle">REAL-TIME DATA INTEGRITY</div>
         </div>
       </div>
 
@@ -273,13 +275,13 @@
                 </div>
               </div>
 
-              <!-- Node 3: STREAMPULSE GUARD -->
+              <!-- Node 3: OXYS INTEGRITY GUARD -->
               <div class="dag-node" onclick="window.DAG.inspectNode('guard')">
                 <div class="dag-node-type">
                   <span>ASSERTION</span>
                   <span class="status-badge badge-peach">05 GUARDS</span>
                 </div>
-                <div class="dag-node-name">STREAMPULSE GUARD</div>
+                <div class="dag-node-name">OXYS INTEGRITY GUARD</div>
                 <div class="dag-node-stat">
                   <span>INLINE D/Q</span>
                   <span>1.4ms</span>
@@ -713,7 +715,7 @@
             </div>
             <div class="terminal-window-body">
               <div style="margin-bottom: 16px; font-size: 20px;">
-                StreamPulse guarantees continuous streaming availability by rolling back RocksDB micro-batch state to the last verified clean checkpoint (<code style="background:var(--panel-peach); padding:2px 6px; font-weight:bold;">cp_00482</code>) and isolating poisoned batch #00483 to MinIO storage.
+                OXYS guarantees continuous streaming availability by rolling back micro-batch state to the last verified clean checkpoint (<code style="background:var(--panel-peach); padding:2px 6px; font-weight:bold;">cp_00482</code>) and isolating poisoned batch #00483 to MinIO storage.
               </div>
 
               <div class="recovery-dag-sequence">
@@ -755,7 +757,7 @@
               <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div>
                   <span style="font-family: var(--font-heading); font-size: 10px;">TARGET RESTORE CHECKPOINT:</span>
-                  <span style="font-weight: bold; margin-left: 8px;">s3://streampulse-checkpoints/prod/orders/cp_00482.chk</span>
+                  <span style="font-weight: bold; margin-left: 8px;">s3://oxys-checkpoints/prod/crypto/cp_00482.chk</span>
                 </div>
                 <button class="btn-brutalist btn-mint" onclick="window.Simulator.healSystem()">[ RESTORE CHECKPOINT & RESUME STREAM ]</button>
               </div>
@@ -927,10 +929,10 @@
             </div>
             <div class="terminal-window-body">
               <div style="display:flex; flex-direction:column; gap:12px; font-size:19px;">
-                <div class="telemetry-row"><span>KAFKA BOOTSTRAP SERVERS:</span> <strong>localhost:9092, localhost:9093</strong></div>
-                <div class="telemetry-row"><span>SPARK CHECKPOINT DIR:</span> <strong>s3://streampulse-checkpoints/prod/</strong></div>
-                <div class="telemetry-row"><span>MINIO QUARANTINE BUCKET:</span> <strong>s3://streampulse-quarantine/</strong></div>
-                <div class="telemetry-row"><span>POSTGRESQL METADATA DSN:</span> <strong>postgresql://pulse:***@localhost:5432/meta</strong></div>
+                <div class="telemetry-row"><span>KAFKA BOOTSTRAP SERVERS:</span> <strong>localhost:9092</strong></div>
+                <div class="telemetry-row"><span>SPARK CHECKPOINT DIR:</span> <strong>s3://oxys-checkpoints/prod/</strong></div>
+                <div class="telemetry-row"><span>MINIO QUARANTINE BUCKET:</span> <strong>s3://oxys-quarantine/</strong></div>
+                <div class="telemetry-row"><span>DATABASE DSN:</span> <strong>sqlite:///./oxys.db / postgresql://postgres:***@localhost:5432/oxys</strong></div>
                 <div class="telemetry-row"><span>eBPF KERNEL PROBE INTERVAL:</span> <strong>1000ms (Clock 1000Hz)</strong></div>
                 <div class="telemetry-row"><span>FASTAPI CONTROL PLANE:</span> <strong>http://localhost:8000 (WebSocket: Active)</strong></div>
               </div>
@@ -957,7 +959,7 @@
 
           <!-- Terminal CLI Input Field -->
           <div class="terminal-cli-input-row">
-            <span class="cli-prompt-symbol">> STREAMPULSE CLI:</span>
+            <span class="cli-prompt-symbol">> OXYS CLI:</span>
             <input type="text" class="cli-input-field" id="cli-input" placeholder="Type 'help', 'status', 'inject null', 'quarantine list', 'heal'..." autocomplete="off" spellcheck="false">
           </div>
         </div>
@@ -969,7 +971,7 @@
     <!-- GLOBAL PERSISTENT BOTTOM STATUS BAR -->
     <div class="global-system-status-bar">
       <div style="font-family: var(--font-heading); font-size: 10px; font-weight: bold;">
-        STREAMPULSE CORE
+        OXYS CORE
       </div>
       <div class="status-bar-node-group">
         <div class="status-bar-node"><span class="status-dot-sm"></span> KAFKA: CONNECTED</div>
@@ -984,14 +986,14 @@
     <!-- SYSTEM FOOTER -->
     <footer class="system-footer">
       <div class="footer-brand">
-        <span style="font-weight:bold;">STREAMPULSE</span>
-        <span>STREAM RELIABILITY ENGINE</span>
+        <span style="font-weight:bold;">OXYS</span>
+        <span>REAL-TIME DATA INTEGRITY ENGINE</span>
       </div>
       <div class="footer-tech-stack">
         <span>KAFKA</span> / <span>SPARK</span> / <span>MINIO</span> / <span>POSTGRESQL</span> / <span>eBPF</span>
       </div>
       <div class="footer-meta">
-        <span>VER: <strong>80.S.PULSE</strong></span>
+        <span>VER: <strong>v2.0-PROD</strong></span>
         <span>SYSTEM: <strong>ONLINE</strong></span>
       </div>
     </footer>

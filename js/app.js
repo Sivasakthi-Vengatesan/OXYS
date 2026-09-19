@@ -1,5 +1,5 @@
 /* ==========================================================================
-   STREAMPULSE - MAIN APPLICATION ORCHESTRATOR (V2 FULL-FEATURED)
+   OXYS - MAIN APPLICATION ORCHESTRATOR
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -76,10 +76,50 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. WebSocket Live Synchronization with FastAPI Backend
+  // 4. Real-time REST Sync from FastAPI & Database
+  async function syncFromBackend() {
+    try {
+      const [statusRes, metricsRes, quarantineRes, guardsRes] = await Promise.all([
+        fetch('/api/system/status').catch(() => null),
+        fetch('/metrics').catch(() => null),
+        fetch('/api/quarantine').catch(() => null),
+        fetch('/api/guards').catch(() => null)
+      ]);
+
+      if (statusRes && statusRes.ok) {
+        const statusData = await statusRes.json();
+        if (statusData.status) window.Store.state.systemStatus = statusData.status;
+      }
+
+      if (quarantineRes && quarantineRes.ok) {
+        const qData = await quarantineRes.json();
+        if (Array.isArray(qData)) {
+          window.Store.state.quarantine = qData;
+        }
+      }
+
+      if (guardsRes && guardsRes.ok) {
+        const gData = await guardsRes.json();
+        if (Array.isArray(gData) && gData.length > 0) {
+          window.Store.state.guards = gData;
+        }
+      }
+
+      window.Store.notify();
+    } catch (e) {}
+  }
+
+  // Poll backend every 2.5 seconds
+  setInterval(syncFromBackend, 2500);
+  syncFromBackend();
+
+  // 5. WebSocket Live Synchronization with FastAPI Backend
   function initWebSocket() {
     try {
-      const wsUrl = `ws://${window.location.hostname || 'localhost'}:8000/ws/events`;
+      const loc = window.location;
+      const proto = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = loc.host || 'localhost:8000';
+      const wsUrl = `${proto}//${host}/ws/events`;
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
@@ -90,17 +130,25 @@ document.addEventListener('DOMContentLoaded', () => {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          // Sync state from backend if active
           if (data.system_status) window.Store.state.systemStatus = data.system_status;
           if (data.circuit_breaker) window.Store.state.circuitBreaker = data.circuit_breaker;
           if (data.active_incident) window.Store.state.activeIncident = data.active_incident;
+          if (data.streams) window.Store.state.streams = data.streams;
+          if (data.guards) window.Store.state.guards = data.guards;
+          if (data.quarantine) window.Store.state.quarantine = data.quarantine;
+          if (data.ebpf) window.Store.state.telemetry.ebpf = data.ebpf;
+          if (data.data_quality) window.Store.state.telemetry.dataQuality = data.data_quality;
+          if (data.latest_event) {
+            const exists = window.Store.state.eventLogs.some(e => e.id === data.latest_event.id);
+            if (!exists) window.Store.state.eventLogs.unshift(data.latest_event);
+          }
           window.Store.notify();
         } catch (e) {}
       };
 
       ws.onerror = () => {
         const wsStatusEl = document.getElementById('status-ws-indicator');
-        if (wsStatusEl) wsStatusEl.innerHTML = '<span class="status-dot-sm" style="background:var(--panel-peach);"></span> ENGINE: LOCAL';
+        if (wsStatusEl) wsStatusEl.innerHTML = '<span class="status-dot-sm" style="background:var(--healthy-mint);"></span> HTTP: LIVE';
       };
 
       ws.onclose = () => {
@@ -110,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   initWebSocket();
 
-  // 5. Incident Detail Modal Controller
+  // 6. Incident Detail Modal Controller
   window.openIncidentModal = function(incidentId) {
     if (window.RetroAudio) window.RetroAudio.playClick();
     const modal = document.getElementById('incident-detail-modal');
@@ -119,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const inc = state.activeIncident || {
       id: '#00483',
       time: '04:32:18 UTC',
-      stream: 'orders',
+      stream: 'crypto_market_stream',
       batch_id: '00483',
       trigger: 'NULL_RATE_BREACH',
       current_value: '27.41%',
@@ -154,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // 6. Event Tag Filtering
+  // 7. Event Tag Filtering
   const filterBtns = document.querySelectorAll('.filter-btn');
   filterBtns.forEach(b => {
     b.addEventListener('click', () => {
@@ -165,17 +213,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 7. Policy Save Actions
+  // 8. Policy Save Actions
   window.savePolicy = function(policyId, inputId) {
     if (window.RetroAudio) window.RetroAudio.playClick();
     const input = document.getElementById(inputId);
     if (input) {
       window.Store.updatePolicyValue(policyId, input.value.trim());
+      fetch(`/api/policies/${policyId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: input.value.trim() })
+      }).catch(() => {});
       alert(`[POLICY SAVED] ${policyId} updated to ${input.value.trim()}`);
     }
   };
 
-  // 8. Subscribe to State Updates
+  // 9. Subscribe to State Updates
   window.Store.subscribe((state) => {
     // Top Bar Status
     const statusPillText = document.getElementById('system-status-text');
@@ -204,18 +257,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const metricIncidents = document.getElementById('metric-incidents-count');
 
     if (metricEventsSec) {
-      const totalRate = state.streams.reduce((acc, s) => acc + s.rate, 0);
+      const totalRate = state.streams.reduce((acc, s) => acc + (s.rate || 0), 0);
       metricEventsSec.textContent = totalRate.toLocaleString();
     }
     if (metricConsumerLag) {
-      const totalLag = state.streams.reduce((acc, s) => acc + s.lag, 0);
+      const totalLag = state.streams.reduce((acc, s) => acc + (s.lag || 0), 0);
       metricConsumerLag.textContent = totalLag.toLocaleString();
     }
     if (metricNullRate) {
       const nullGuard = state.guards.find(g => g.id === 'null_rate');
       if (nullGuard) {
-        metricNullRate.textContent = `${nullGuard.current.toFixed(2)}%`;
-        metricNullRate.style.color = nullGuard.current > 15.00 ? 'red' : 'inherit';
+        metricNullRate.textContent = `${Number(nullGuard.current || 0).toFixed(2)}%`;
+        metricNullRate.style.color = Number(nullGuard.current || 0) > 15.00 ? 'red' : 'inherit';
       }
     }
     if (metricIncidents) {
@@ -230,12 +283,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <tr class="${state.selectedStreamId === st.id ? 'row-selected' : ''}" onclick="window.Store.selectStream('${st.id}')" style="cursor:pointer;">
           <td style="font-family:var(--font-heading); font-size:10px; font-weight:bold;">${st.name}</td>
           <td><span class="status-badge ${st.status === 'RUNNING' ? 'badge-mint' : 'badge-coral'}">● ${st.status}</span></td>
-          <td style="font-weight:bold;">${st.rate.toLocaleString()} /s</td>
-          <td>${st.lag.toLocaleString()}</td>
-          <td>${st.offset.toLocaleString()}</td>
-          <td>${st.partitions}</td>
-          <td><span class="status-badge badge-peach">${st.schemaVer}</span></td>
-          <td><span class="status-badge ${st.circuit === 'CLOSED' ? 'badge-mint' : 'badge-coral'}">${st.circuit}</span></td>
+          <td style="font-weight:bold;">${Number(st.rate || 0).toLocaleString()} /s</td>
+          <td>${Number(st.lag || 0).toLocaleString()}</td>
+          <td>${Number(st.offset || 0).toLocaleString()}</td>
+          <td>${st.partitions || 8}</td>
+          <td><span class="status-badge badge-peach">${st.schemaVer || 'v1.0.0'}</span></td>
+          <td><span class="status-badge ${st.circuit === 'CLOSED' ? 'badge-mint' : 'badge-coral'}">${st.circuit || 'CLOSED'}</span></td>
         </tr>
       `).join('');
     }
@@ -250,11 +303,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="status-badge badge-mint">● ${p.state}</span>
           </div>
           <div style="display:flex; flex-direction:column; gap:4px; font-size:18px;">
-            <div>SOURCE: <strong>${p.sourceTopic}</strong></div>
-            <div>PROCESSOR: <strong>${p.processorJob}</strong></div>
-            <div>GUARD: <strong>${p.guardId}</strong></div>
-            <div>SINK: <strong>${p.sinkDest}</strong></div>
-            <div style="font-size:14px; opacity:0.8; margin-top:4px;">LAST BATCH: ${p.lastExecution}</div>
+            <div>SOURCE: <strong>${p.sourceTopic || p.source_topic}</strong></div>
+            <div>PROCESSOR: <strong>${p.processorJob || p.processor_job}</strong></div>
+            <div>GUARD: <strong>${p.guardId || p.guard_id}</strong></div>
+            <div>SINK: <strong>${p.sinkDest || p.sink_dest}</strong></div>
+            <div style="font-size:14px; opacity:0.8; margin-top:4px;">LAST BATCH: ${p.lastExecution || p.last_execution || 'ACTIVE'}</div>
           </div>
         </div>
       `).join('');
@@ -292,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <div style="display:flex; justify-content:space-between; font-size:16px; border-top:1px dashed var(--deep-purple); padding-top:6px;">
-              <span>BREACHES: <strong>${String(g.breaches).padStart(2,'0')}</strong></span>
+              <span>BREACHES: <strong>${String(g.breaches || 0).padStart(2,'0')}</strong></span>
               <span>TYPE: <strong>${g.type}</strong></span>
             </div>
           </div>
@@ -325,7 +378,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.TerminalREPL.renderLogs(state);
   });
 
-  // Start Streaming Physics Engine
-  window.Simulator.start();
   window.Store.notify();
 });

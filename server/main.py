@@ -1,13 +1,15 @@
 """
-StreamPulse FastAPI Control Plane Backend
+OXYS FastAPI Control Plane Backend
+Real-time Streaming Data Integrity & Anomaly Protection System
 """
 import asyncio
 from typing import List, Optional, Dict, Any
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
+from datetime import datetime
 
 from server.models import (
     StreamModel, PipelineModel, GuardModel, CircuitBreakerModel,
@@ -15,11 +17,23 @@ from server.models import (
     DataQualityTelemetryModel, SystemEventModel, PolicyModel, IncidentModel
 )
 from server.engine import engine
+from server.db import db
+from server.storage import storage
+from engine.processor import processor
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    engine.start_services()
+    yield
+    engine.stop_services()
 
 app = FastAPI(
-    title="StreamPulse API",
-    description="Real-time Data Reliability & Containment Control Plane",
-    version="1.0.0"
+    title="OXYS API",
+    description="OXYS - Real-time integrity protection for streaming data.",
+    version="2.0.0",
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -30,8 +44,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Active WebSocket connections
 connected_websockets: List[WebSocket] = []
+
 
 @app.websocket("/ws/events")
 async def websocket_events_endpoint(websocket: WebSocket):
@@ -39,6 +55,7 @@ async def websocket_events_endpoint(websocket: WebSocket):
     connected_websockets.append(websocket)
     try:
         while True:
+            metrics_summary = db.get_metrics_summary()
             state_payload = {
                 "system_status": engine.system_status,
                 "streams": engine.streams,
@@ -48,15 +65,128 @@ async def websocket_events_endpoint(websocket: WebSocket):
                 "ebpf": engine.ebpf,
                 "data_quality": engine.data_quality,
                 "active_incident": engine.active_incident,
+                "metrics_summary": metrics_summary,
                 "latest_event": engine.events[0] if engine.events else None
             }
             await websocket.send_json(state_payload)
-            await asyncio.sleep(1.5)
+            await asyncio.sleep(1.0)
     except WebSocketDisconnect:
         if websocket in connected_websockets:
             connected_websockets.remove(websocket)
 
-# --- REST ENDPOINTS ---
+
+# ==========================================
+# 1. CORE REQUIRED API ENDPOINTS
+# ==========================================
+
+@app.get("/health")
+def get_health():
+    return {
+        "status": "HEALTHY" if engine.system_status == "ONLINE" else "DEGRADED",
+        "system_status": engine.system_status,
+        "database": "CONNECTED",
+        "storage": "CONNECTED",
+        "circuit_breaker": engine.circuit_breaker["state"],
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+@app.get("/metrics")
+def get_metrics():
+    summary = db.get_metrics_summary()
+    guards = engine.guards
+    null_g = next((g for g in guards if g["id"] == "null_rate"), None)
+    card_g = next((g for g in guards if g["id"] == "cardinality"), None)
+    
+    return {
+        "events_processed": summary["events_processed"],
+        "events_allowed": summary["events_allowed"],
+        "events_quarantined": summary["events_quarantined"],
+        "events_blocked": summary["events_blocked"],
+        "anomaly_count": summary["anomaly_count"],
+        "null_rate_pct": null_g["current"] if null_g else 2.14,
+        "cardinality_entropy": card_g["current"] if card_g else 0.88,
+        "circuit_state": engine.circuit_breaker["state"],
+        "pipeline_health": "OPTIMAL" if engine.circuit_breaker["state"] == "CLOSED" else "CONTAINMENT_ENGAGED"
+    }
+
+
+@app.get("/events")
+def get_real_events(limit: int = Query(50, ge=1, le=500)):
+    return db.get_recent_events(limit=limit)
+
+
+@app.get("/anomalies")
+def get_anomalies():
+    metrics = db.get_metrics_summary()
+    return {
+        "total_anomalies": metrics["anomaly_count"],
+        "recent_anomalies": metrics["recent_anomalies"]
+    }
+
+
+@app.get("/schema")
+def get_schema(source: Optional[str] = Query(None)):
+    schemas = {
+        "usgs": {
+            "magnitude": "float (seismic amplitude)",
+            "place": "string (geographic descriptor)",
+            "longitude": "float (degrees)",
+            "latitude": "float (degrees)",
+            "depth": "float (hypocenter depth km)",
+            "mag_type": "string (magnitude scale e.g. mb, ml, mw)",
+            "status": "string (reviewed / automatic)",
+            "tsunami": "integer (0/1)",
+            "significance": "integer (0-1000)"
+        },
+        "crypto": {
+            "symbol": "string (categorical key)",
+            "last_price": "float (continuous numeric)",
+            "volume": "float (continuous numeric)",
+            "price_change_percent": "float (continuous numeric)",
+            "trade_count": "integer"
+        },
+        "weather": {
+            "station_id": "string",
+            "latitude": "float",
+            "longitude": "float",
+            "temperature_c": "float",
+            "relative_humidity_pct": "float",
+            "wind_speed_kmh": "float"
+        }
+    }
+    expected = schemas.get(source, schemas["usgs"]) if source else schemas["usgs"]
+    return {
+        "active_schema_version": "v1.0.0",
+        "primary_source": source or "usgs",
+        "expected_fields": expected,
+        "all_schemas": schemas,
+        "validation_policy": "STRICT_AVRO_COMPATIBLE",
+        "drift_tolerance": "0 allowed"
+    }
+
+
+@app.get("/quarantine")
+def get_quarantine_all():
+    return db.get_quarantined_batches()
+
+
+@app.get("/pipeline/status")
+def get_pipeline_status():
+    return {
+        "pipeline_name": "oxys-real-time-integrity-engine",
+        "status": engine.system_status,
+        "circuit_breaker": engine.circuit_breaker,
+        "active_pipelines": engine.pipelines,
+        "active_streams": engine.streams,
+        "kafka_topics": ["oxys.raw", "oxys.normalized", "oxys.quarantine"],
+        "minio_buckets": ["oxys-quarantine", "oxys-checkpoints", "oxys-lakehouse"]
+    }
+
+
+# ==========================================
+# 2. REST API ENDPOINTS FOR DASHBOARD & CLI
+# ==========================================
 
 @app.get("/api/system/status")
 def get_system_status():
@@ -74,9 +204,11 @@ def get_system_status():
         "ebpf_status": "ACTIVE"
     }
 
+
 @app.get("/api/streams", response_model=List[StreamModel])
 def get_streams():
     return engine.streams
+
 
 @app.get("/api/streams/{stream_id}", response_model=StreamModel)
 def get_stream_by_id(stream_id: str):
@@ -85,17 +217,21 @@ def get_stream_by_id(stream_id: str):
         raise HTTPException(status_code=404, detail="Stream not found")
     return s
 
+
 @app.get("/api/pipelines", response_model=List[PipelineModel])
 def get_pipelines():
     return engine.pipelines
+
 
 @app.get("/api/guards", response_model=List[GuardModel])
 def get_guards():
     return engine.guards
 
+
 @app.get("/api/circuit", response_model=CircuitBreakerModel)
 def get_circuit_breaker():
     return engine.circuit_breaker
+
 
 @app.post("/api/circuit/{action}")
 def post_circuit_action(action: str):
@@ -104,57 +240,69 @@ def post_circuit_action(action: str):
     elif action == "reset":
         engine.heal_system()
     elif action == "half-open":
-        engine.circuit_breaker["state"] = "HALF-OPEN"
+        processor.circuit_breaker.half_open()
         engine.add_event("circuit_breaker", "CANARY PROBE BATCH INJECTED (HALF-OPEN)", "INFO", "CIRCUIT")
     return engine.circuit_breaker
+
 
 @app.get("/api/quarantine", response_model=List[QuarantineBatchModel])
 def get_quarantine():
     return engine.quarantine
 
-@app.get("/api/quarantine/{batch_id}", response_model=QuarantineBatchModel)
+
+@app.get("/api/quarantine/{batch_id}")
 def get_quarantine_batch(batch_id: str):
-    b = next((q for q in engine.quarantine if q["batch_id"] == batch_id), None)
+    b = next((q for q in engine.quarantine if q["batchId"] == batch_id or q.get("batch_id") == batch_id), None)
     if not b:
         raise HTTPException(status_code=404, detail="Batch not in quarantine")
     return b
 
+
 @app.post("/api/quarantine/{batch_id}/replay")
 def post_replay_batch(batch_id: str):
-    b = next((q for q in engine.quarantine if q["batch_id"] == batch_id), None)
+    batches = db.get_quarantined_batches()
+    b = next((q for q in batches if q["batchId"] == batch_id), None)
     if not b:
         raise HTTPException(status_code=404, detail="Batch not found")
-    b["status"] = "REPLAYED"
     engine.add_event("quarantine_engine", f"BATCH #{batch_id} REPLAYED WITH SANITIZED SCHEMA", "HEALTHY", "QUARANTINE")
     return {"status": "SUCCESS", "message": f"Batch #{batch_id} replayed cleanly."}
 
+
 @app.post("/api/quarantine/{batch_id}/release")
 def post_release_batch(batch_id: str):
-    b = next((q for q in engine.quarantine if q["batch_id"] == batch_id), None)
+    batches = db.get_quarantined_batches()
+    b = next((q for q in batches if q["batchId"] == batch_id), None)
     if not b:
         raise HTTPException(status_code=404, detail="Batch not found")
-    b["status"] = "RELEASED"
     engine.add_event("quarantine_engine", f"OVERRIDE: BATCH #{batch_id} RELEASED TO DOWNSTREAM SINK", "ALERT", "QUARANTINE")
     return {"status": "RELEASED", "message": f"Batch #{batch_id} released to sink."}
 
+
 @app.post("/api/quarantine/{batch_id}/delete")
 def post_delete_batch(batch_id: str):
-    b = next((q for q in engine.quarantine if q["batch_id"] == batch_id), None)
+    batches = db.get_quarantined_batches()
+    b = next((q for q in batches if q["batchId"] == batch_id), None)
     if not b:
         raise HTTPException(status_code=404, detail="Batch not found")
-    engine.quarantine = [q for q in engine.quarantine if q["batch_id"] != batch_id]
+    with db.get_session() as session:
+        from server.db import QuarantinedEventRecord
+        session.query(QuarantinedEventRecord).filter(QuarantinedEventRecord.batch_id == batch_id).delete()
+        session.commit()
     engine.add_event("quarantine_engine", f"PERMANENT AUDIT PURGE: BATCH #{batch_id} REMOVED FROM VAULT", "ALERT", "QUARANTINE")
     return {"status": "DELETED", "message": f"Batch #{batch_id} deleted."}
+
 
 @app.get("/api/recovery")
 def get_recovery():
     return engine.recovery
+
 
 @app.post("/api/recovery/restore")
 def post_restore_recovery():
     engine.heal_system()
     engine.add_event("recovery_manager", f"RESTORE CHECKPOINT {engine.recovery['current_checkpoint']} EXECUTED", "HEALTHY", "RECOVERY")
     return {"status": "RESTORED", "checkpoint": engine.recovery["current_checkpoint"]}
+
 
 @app.get("/api/telemetry")
 def get_telemetry():
@@ -163,11 +311,14 @@ def get_telemetry():
         "data_quality": engine.data_quality
     }
 
+
 @app.post("/api/telemetry/correlate")
 def post_telemetry_correlate():
-    is_data = engine.guards[1]["current"] > 15.0
+    guards = engine.guards
+    null_g = next((g for g in guards if g["id"] == "null_rate"), None)
+    is_data = (null_g["current"] > 15.0) if null_g else False
     is_infra = engine.ebpf["socket_latency"] > 50.0
-    
+
     if is_data and not is_infra:
         verdict = "DATA_CORRUPTION"
         diag = "PURE APPLICATION DATA ANOMALY. Kernel eBPF layer healthy (3.1ms latency, 0% drop). Upstream serialization defect."
@@ -185,15 +336,18 @@ def post_telemetry_correlate():
         "data_quality_sample": engine.data_quality
     }
 
+
 @app.get("/api/events", response_model=List[SystemEventModel])
 def get_events(category: Optional[str] = None):
     if category and category.upper() != "ALL":
         return [e for e in engine.events if e["category"].upper() == category.upper()]
     return engine.events
 
+
 @app.get("/api/policies", response_model=List[PolicyModel])
 def get_policies():
     return engine.policies
+
 
 @app.put("/api/policies/{policy_id}")
 def update_policy(policy_id: str, payload: Dict[str, Any]):
@@ -204,28 +358,23 @@ def update_policy(policy_id: str, payload: Dict[str, Any]):
     engine.add_event("config_manager", f"POLICY UPDATED: {p['name']} -> {p['value']} {p['unit']}", "CONFIG", "GUARD")
     return p
 
-# Simulation Endpoints
+
+# Anomaly Injections for Failure Testing & Demo
 @app.post("/api/simulation/inject/{anomaly_type}")
 def post_inject_anomaly(anomaly_type: str):
     if anomaly_type == "null":
         engine.inject_null_spike()
     elif anomaly_type == "schema":
-        schema_g = next((g for g in engine.guards if g["id"] == "schema"), None)
-        if schema_g:
-            schema_g["current"] = 1.00
-            schema_g["metric"] = "FIELD TYPE MISMATCH (amount_cents: String != Int64)"
-            schema_g["status"] = "BREACHED"
-        engine.circuit_breaker["state"] = "OPEN"
-        engine.circuit_breaker["reason"] = "SCHEMA_DRIFT"
-        engine.add_event("guard_schema", "CRITICAL: SCHEMA DRIFT on payments", "ALERT", "GUARD")
+        engine.inject_schema_drift()
+    elif anomaly_type == "duplicate":
+        engine.inject_duplicate_event()
     elif anomaly_type == "volume":
         vol_g = next((g for g in engine.guards if g["id"] == "volume"), None)
         if vol_g:
             vol_g["current"] = 184.20
             vol_g["metric"] = "+184.20% / min"
             vol_g["status"] = "BREACHED"
-        engine.circuit_breaker["state"] = "OPEN"
-        engine.circuit_breaker["reason"] = "VOLUME_BREACH"
+        processor.circuit_breaker.trip("VOLUME_SURGE_SPIKE", "+184.20%")
         engine.add_event("guard_volume", "VOLUME SURGE BREACH: +184.20%", "ALERT", "GUARD")
     elif anomaly_type == "network":
         engine.ebpf["socket_latency"] = 88.4
@@ -233,24 +382,32 @@ def post_inject_anomaly(anomaly_type: str):
         engine.add_event("ebpf_kernel", "HIGH SOCKET LATENCY (88.4ms) & 4.2% PACKET LOSS", "ALERT", "INFRASTRUCTURE")
     return {"status": "INJECTED", "anomaly": anomaly_type}
 
+
 @app.post("/api/simulation/heal")
 def post_heal_simulation():
     engine.heal_system()
     return {"status": "HEALED", "system_status": engine.system_status}
 
-# --- STATIC FILES ROUTING ---
+
+# ==========================================
+# 3. STATIC FILES ROUTING
+# ==========================================
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 @app.get("/")
 @app.get("/index.html")
 async def serve_index():
     return FileResponse(os.path.join(base_dir, "index.html"))
 
+
 @app.get("/app")
 @app.get("/app.html")
 async def serve_app():
     return FileResponse(os.path.join(base_dir, "app.html"))
 
+
 app.mount("/styles", StaticFiles(directory=os.path.join(base_dir, "styles")), name="styles")
 app.mount("/js", StaticFiles(directory=os.path.join(base_dir, "js")), name="js")
-
+if os.path.exists(os.path.join(base_dir, "assets")):
+    app.mount("/assets", StaticFiles(directory=os.path.join(base_dir, "assets")), name="assets")

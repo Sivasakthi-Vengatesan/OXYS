@@ -1,12 +1,12 @@
 /* ==========================================================================
-   STREAMPULSE - SUBSYSTEM SPECIFIC STYLES
+   OXYS - SUBSYSTEM SPECIFIC STYLES
    ========================================================================== */
 
 /* Subsystem View Container (Tab-switched) */
 .subsystem-view {
   display: none;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
 .subsystem-view.active-view {
@@ -16,8 +16,20 @@
 /* 1. CONTROL CENTER */
 .control-metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1200px) {
+  .control-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .control-metrics-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .control-action-bar {
@@ -26,77 +38,77 @@
   justify-content: space-between;
   background: var(--panel-peach);
   border: 3px solid var(--deep-purple);
-  padding: 12px 16px;
-  box-shadow: var(--shadow-primary);
+  padding: 8px 12px;
+  box-shadow: 3px 3px 0 var(--deep-purple);
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* 2. STREAMS SUBSYSTEM */
 .stream-inspector-drawer {
   background: var(--panel-peach);
-  border: 4px solid var(--deep-purple);
-  padding: 16px;
-  box-shadow: var(--shadow-double);
+  border: 3px solid var(--deep-purple);
+  padding: 14px;
+  box-shadow: 3px 3px 0 var(--deep-purple);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .stream-part-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   max-height: 220px;
   overflow-y: auto;
   border: 2px solid var(--deep-purple);
   background: var(--bg-lavender);
-  padding: 8px;
+  padding: 6px;
 }
 
 .part-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px;
+  padding: 3px 6px;
   background: var(--panel-peach);
   border: 1px solid var(--deep-purple);
   font-family: var(--font-data);
-  font-size: 18px;
+  font-size: 16px;
 }
 
 /* 3. PIPELINES SUBSYSTEM */
 .pipelines-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
 }
 
 .pipeline-card {
   background: var(--panel-peach);
-  border: 4px solid var(--deep-purple);
-  box-shadow: var(--shadow-double);
-  padding: 16px;
+  border: 3px solid var(--deep-purple);
+  box-shadow: 3px 3px 0 var(--deep-purple);
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* 4. GUARDS SUBSYSTEM & INDIVIDUAL GUARD VIEWS */
 .guards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
 }
 
 .guard-card {
   background: var(--panel-peach);
-  border: 4px solid var(--deep-purple);
-  box-shadow: var(--shadow-double);
-  padding: 16px;
+  border: 3px solid var(--deep-purple);
+  box-shadow: 3px 3px 0 var(--deep-purple);
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .guard-card.breached {

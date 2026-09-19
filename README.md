@@ -1,248 +1,391 @@
-# StreamPulse
+# OXYS
 
-> **High-Throughput Real-Time Event Ingestion, Telemetry Processing, and Circuit-Breaker Pipeline Engine.**
+> **Domain-Agnostic Real-Time Streaming Data Integrity and Anomaly Protection Engine.**  
+> OXYS provides inline streaming assertions across distributed messaging backbones, isolating schema drift, null-rate spikes, cardinality collapse, and duplicate replay storms before bad data contaminates downstream lakehouses and analytics systems.
 
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![CI Pipeline](https://img.shields.io/badge/CI-Passing-brightgreen?style=flat-square&logo=githubactions&logoColor=white)](tests/)
+[![Python Version](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![AsyncIO](https://img.shields.io/badge/AsyncIO-uvloop-FF6F00?style=flat-square)](https://docs.python.org/3/library/asyncio.html)
-[![WebSockets](https://img.shields.io/badge/WebSockets-Real--Time-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://websockets.readthedocs.io/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-Distributed%20Log-231F20?style=flat-square&logo=apachekafka&logoColor=white)](https://kafka.apache.org/)
+[![Apache Spark](https://img.shields.io/badge/Apache%20Spark-Structured%20Streaming-E25A1C?style=flat-square&logo=apachespark&logoColor=white)](https://spark.apache.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![MinIO](https://img.shields.io/badge/MinIO-S3%20Lakehouse-C72C48?style=flat-square&logo=minio&logoColor=white)](https://min.io/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 ---
 
-## 1. One-Liner & Impact Overview
+## Table of Contents
 
-**StreamPulse** is a high-performance control plane and real-time streaming engine built to solve ingestion lag, upstream schema drift, unhandled burst surges, and silent poison-pill data corruption in mission-critical streaming pipelines.
-
-In distributed event architectures, unvalidated schema changes and burst retry storms frequently cascade downstream—saturating message brokers, poisoning analytical lakehouses, and crashing batch workers. StreamPulse provides non-invasive, sub-millisecond payload validation, bounded in-memory sliding-window buffering, an automated finite-state circuit breaker, and an isolated dead-letter quarantine vault that preserves data integrity without dropping upstream traffic.
-
----
-
-## 2. Key Architectural Features
-
-- **Asynchronous Non-Blocking I/O Core**: Built on Python `asyncio` and `FastAPI` (with `uvloop`), decoupling high-velocity ingestion endpoints from downstream processing and serialization routines.
-- **Deterministic Payload & Data-Quality Guards**: Enforces sub-millisecond runtime assertions across 5 core dimensions:
-  - *Structural*: Schema drift detection and field type mismatch enforcement.
-  - *Quality*: Dynamic null-rate breach thresholding (configurable percentage limit).
-  - *Entropy*: Shannon entropy cardinality tracking on primary partition keys.
-  - *Statistical*: Z-score numerical distribution drift profiling.
-  - *Throughput*: Rolling-window volume spike and retry-storm rate limits.
-- **Automated Kinetic Circuit Breaker**: Finite-state machine (`CLOSED` $\rightarrow$ `OPEN` $\rightarrow$ `QUARANTINED` $\rightarrow$ `HALF-OPEN` $\rightarrow$ `RECOVERED`) that halts downstream ingestion when error tolerances are exceeded, preventing cascade failures.
-- **Poison-Pill Quarantine Vault**: Automated isolation of non-compliant batches to immutable partitioned Parquet/S3 storage, supporting point-in-time schema-sanitized replay and audit purge.
-- **Sub-10ms Real-Time Telemetry & Broadcast**: High-frequency push updates over multiplexed WebSockets to operator dashboards and monitoring clients with zero polling overhead.
-- **Kernel-Level vs. App-Level Telemetry Correlation**: Correlates eBPF socket-level metrics (RTT, packet loss, retransmits) against application data anomalies to isolate infrastructure bottlenecks from application serialization bugs.
+- [1. Technical Overview](#1-technical-overview)
+- [2. Key Features](#2-key-features)
+- [3. Architecture & Data Flow](#3-architecture--data-flow)
+- [4. Ingestion & Canonical Event Format](#4-ingestion--canonical-event-format)
+- [5. Stream Quality & Integrity Guards](#5-stream-quality--integrity-guards)
+- [6. Kinetic Circuit Breaker FSM](#6-kinetic-circuit-breaker-fsm)
+- [7. Quickstart & Installation](#7-quickstart--installation)
+- [8. Configuration & Environment Variables](#8-configuration--environment-variables)
+- [9. API Reference & Control Plane](#9-api-reference--control-plane)
+- [10. Testing & Controlled Chaos Verification](#10-testing--controlled-chaos-verification)
+- [11. Contributing](#11-contributing)
+- [12. Roadmap](#12-roadmap)
+- [13. License](#13-license)
 
 ---
 
-## 3. System Architecture
+## 1. Technical Overview
 
-### 3.1 End-to-End Pipeline Flow
+In event-driven stream architectures, unvalidated upstream bugs—such as silent serialization errors, unannounced schema drift, corrupted null spikes, or retry storms—cascade downstream unchecked. Traditional validation approaches rely on batch post-mortems after databases and data lakes have already been corrupted.
 
-```mermaid
-flowchart TD
-    subgraph Ingestion["1. Ingestion Layer"]
-        PROD["Upstream Producers / CDC / IoT"] -->|HTTP / gRPC / Kafka| GW["FastAPI Ingestion Gateway"]
-        GW --> BUFFER["Bounded Ring Buffer / Redis Queue"]
-    end
-
-    subgraph Inspection["2. Validation & Quality Guards"]
-        BUFFER --> GUARD_ENGINE["StreamPulse Guard Engine"]
-        GUARD_ENGINE --> G1["Schema Integrity<br/>(Strict Avro/Protobuf)"]
-        GUARD_ENGINE --> G2["Null Rate Limit<br/>(≤ 15.00%)"]
-        GUARD_ENGINE --> G3["Entropy / Cardinality<br/>(> 0.40)"]
-        GUARD_ENGINE --> G4["Z-Score Distribution<br/>(Z < 3.50)"]
-        GUARD_ENGINE --> G5["Volume Surge Limit<br/>(< 50%/min)"]
-    end
-
-    subgraph Decision["3. Routing & Containment"]
-        G1 & G2 & G3 & G4 & G5 --> EVAL{"Breach<br/>Detected?"}
-        EVAL -- "No (Nominal)" --> SINK_ROUTER["Sink Dispatcher"]
-        EVAL -- "Yes (Anomaly)" --> CB["Circuit Breaker<br/>(Tripped -> OPEN)"]
-    end
-
-    subgraph Execution["4. Sinks & Quarantine"]
-        SINK_ROUTER --> LAKEHOUSE[("Primary Lakehouse<br/>MinIO / S3 / Postgres")]
-        CB --> VAULT[("Quarantine Vault<br/>Isolated S3 Parquet")]
-        VAULT --> CHK["Checkpoint Recovery<br/>(Last Valid Offset)"]
-    end
-
-    subgraph Broadcast["5. Telemetry & Control Plane"]
-        GW -.->|Socket Telemetry| EBPF["eBPF Network Probes"]
-        GUARD_ENGINE -.->|State Vector| STATE_ENGINE["State Controller"]
-        STATE_ENGINE --> WS_BROADCAST["WebSocket Broadcast Engine<br/>(/ws/events)"]
-        WS_BROADCAST --> DASHBOARD["Operator Console / REPL UI"]
-    end
-
-    style Ingestion fill:#1a1b26,stroke:#7aa2f7,stroke-width:2px,color:#c0caf5
-    style Inspection fill:#1a1b26,stroke:#bb9af7,stroke-width:2px,color:#c0caf5
-    style Decision fill:#1a1b26,stroke:#f7768e,stroke-width:2px,color:#c0caf5
-    style Execution fill:#1a1b26,stroke:#9ece6a,stroke-width:2px,color:#c0caf5
-    style Broadcast fill:#1a1b26,stroke:#e0af68,stroke-width:2px,color:#c0caf5
-```
-
-### 3.2 Sequence Execution & Failover Lifecycle
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as Ingestion Client
-    participant API as FastAPI Ingestion Gateway
-    participant Guard as Quality Guard Engine
-    participant CB as Circuit Breaker FSM
-    participant Vault as Quarantine Vault (MinIO)
-    participant WS as WebSocket Clients
-
-    Client->>API: POST /api/events (Batch #00483, 18,420 events)
-    API->>Guard: Evaluate Batch Assertions (Schema, Nulls, Entropy)
-    
-    alt Anomaly Detected (Null Rate = 27.41% > 15.00%)
-        Guard->>CB: Trigger Breach Notification (NULL_RATE_BREACH)
-        CB->>CB: Transition State: CLOSED -> OPEN
-        Guard->>Vault: Isolate Batch #00483 (s3://quarantine/orders/batch_00483.parquet)
-        CB->>WS: Broadcast State Payload {"circuit": "OPEN", "batch": "00483"}
-        API-->>Client: 202 Accepted (Batch Quarantined, Safe Checkpoint Retained)
-    else Nominal Batch
-        Guard->>API: Batch Validated
-        API->>WS: Broadcast Telemetry Update
-        API-->>Client: 200 OK (Committed to Main Pipeline)
-    end
-```
+**OXYS** functions as an inline data firewall between streaming logs (e.g. Apache Kafka) and storage sinks (PostgreSQL, MinIO S3, Apache Iceberg, Delta Lake). Every incoming micro-batch is evaluated in real time against strict schema contracts, statistical distribution baselines, and entropy invariants. When an integrity breach occurs, OXYS dynamically routes bad records to a quarantined dead-letter vault while preserving continuous healthy stream processing.
 
 ---
 
-## 4. Concurrency & Performance Benchmarks
+## 2. Key Features
 
-Benchmarking was conducted on an 8-core, 16GB RAM node running Linux kernel 6.5 with `uvloop` asynchronous event worker pools. Ingestion payloads consisted of canonical 1.2 KB financial CDC transaction records.
-
-| Concurrency Level | Ingestion Throughput | Latency (p50) | Latency (p99) | CPU Utilization | Memory Footprint | Drop Rate |
-|---|---|---|---|---|---|---|
-| **100 Concurrent Sessions** | 18,450 req/sec | 1.12 ms | 3.40 ms | 18.2% | 142 MB | 0.00% |
-| **500 Concurrent Sessions** | 42,100 req/sec | 2.30 ms | 6.85 ms | 38.6% | 210 MB | 0.00% |
-| **1,000 Concurrent Sessions** | 78,900 req/sec | 3.85 ms | 11.20 ms | 64.0% | 345 MB | 0.00% |
-| **2,500 Concurrent Sessions** | 112,400 req/sec | 6.10 ms | 18.90 ms | 86.5% | 512 MB | 0.00% |
-| **5,000 Concurrent Peak** | 134,200 req/sec | 9.40 ms | 28.50 ms | 94.1% | 680 MB | 0.00% (Backpressure Engaged) |
-
-*Key Takeaway: The system maintains sub-20ms p99 response times at over 100k req/sec with deterministic memory bounds.*
+- **Domain-Agnostic Real Stream Ingestion**: Ships with live telemetry adapters (USGS Earthquake Hazards Program GeoJSON Feed, Binance Crypto Market Stream, and Open-Meteo Planetary Sensor Stream) with continuous background deduplication and deterministic envelope normalization.
+- **5 Sub-Millisecond Integrity Guards**:
+  - *Schema Drift Guard*: Enforces type contracts and flags undeclared mutations.
+  - *Null-Rate Guard*: Monitors rolling null frequencies against configurable thresholds.
+  - *Cardinality / Shannon Entropy Guard*: Detects key collapse or loss of diversity across partition keys.
+  - *Distribution / Z-Score Outlier Guard*: Detects numerical anomalies against rolling baselines.
+  - *Duplicate Replay Guard*: Sliding-window deduplication on deterministic event IDs.
+- **Three-Tier Kinetic Circuit Breaker**:
+  - `ALLOW`: Commits validated records directly to lakehouse and database sinks.
+  - `QUARANTINE`: Isolates anomalous batches to immutable MinIO S3 vaults (`s3://oxys-quarantine/`) and logs structured incidents.
+  - `BLOCK`: Drops replay storms and unrecoverable malformed binary payloads immediately.
+- **Zero Mock Fallback Execution**: Embedded socket probes detect Kafka/MinIO brokers in `< 0.2s` and seamlessly operate standalone via in-memory streaming queues and SQLite/PostgreSQL storage.
+- **Operator Console & Control Plane**: Full FastAPI REST API, live WebSockets (`/ws/events`), and a retro terminal UI.
 
 ---
 
-## 5. Failure Recovery & Edge-Case Handling
+## 3. Architecture & Data Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          FAILURE TOLERANCE MATRIX                           │
-├───────────────────────┬─────────────────────────────────────────────────────┤
-│ SCENARIO              │ SYSTEM MITIGATION & RECOVERY MECHANISM              │
-├───────────────────────┼─────────────────────────────────────────────────────┤
-│ Client Drop / Network │ Heartbeat ping/pong frames with automatic connection│
-│ Disconnect            │ pool cleanup and graceful channel resource dealloc. │
-├───────────────────────┼─────────────────────────────────────────────────────┤
-│ Burst Surge / Memory  │ Bounded ring buffer with adaptive token-bucket rate │
-│ Saturation            │ limiting; triggers HTTP 429 / backpressure upstream.│
-├───────────────────────┼─────────────────────────────────────────────────────┤
-│ Poison-Pill Records / │ Instant circuit trip (<1ms); batch rerouted to MinIO│
-│ Schema Drift          │ quarantine; safe checkpoint rolled back; 0 data loss│
-├───────────────────────┼─────────────────────────────────────────────────────┤
-│ State Synchronization │ Lock-free atomic state mutations using thread-safe  │
-│ Race Conditions       │ Python event loop constructs and idempotency keys.  │
-└───────────────────────┴─────────────────────────────────────────────────────┘
++-------------------------------------------------------------------------------+
+|                        1. REAL EXTERNAL DATA SOURCES                          |
+|  - USGS Earthquake GeoJSON Feed (Continuous Seismic Telemetry)                |
+|  - Binance Market Ticker Stream (Live Trade Figures)                          |
+|  - Open-Meteo Telemetry Stream (Atmospheric Stations)                         |
++---------------------------------------+---------------------------------------+
+                                        |
+                                        v
++-------------------------------------------------------------------------------+
+|                      2. INGESTION & DEDUPLICATION LAYER                       |
+|  - Ingestion Adapter (Poll & Fetch)                                           |
+|  - State-Aware Deduplication Cache (feature_id -> updated_timestamp)          |
+|  - Canonical Event Envelope Normalizer                                        |
+|  - OxysKafkaProducer (Deterministic Event Hashing)                            |
++---------------------------------------+---------------------------------------+
+                                        |
+                                        v
++-------------------------------------------------------------------------------+
+|                             3. APACHE KAFKA LOG                               |
+|  - Topic: oxys.raw           (Raw Ingested Events)                            |
+|  - Topic: oxys.normalized    (Canonical Envelopes)                            |
+|  - Topic: oxys.quarantine    (Malformed Payloads)                             |
++---------------------------------------+---------------------------------------+
+                                        |
+                                        v
++-------------------------------------------------------------------------------+
+|           4. SPARK STRUCTURED STREAMING & OXYS DETECTION ENGINE               |
+|  - Micro-Batch Stream Processor (Consumer Group: oxys-spark-cg)               |
+|  - Guard 1: Schema Drift & Type Contract Verification                         |
+|  - Guard 2: Rolling Window Null Rate (Threshold <= 15.00%)                   |
+|  - Guard 3: Cardinality & Shannon Entropy (Diversity > 0.40)                  |
+|  - Guard 4: Statistical Distribution Outlier (Z-Score < 3.50)                 |
+|  - Guard 5: Duplicate Replay Storm Dedup Window                               |
++---------------------------------------+---------------------------------------+
+                                        |
+                                        v
++-------------------------------------------------------------------------------+
+|                    5. KINETIC CIRCUIT BREAKER ROUTING                         |
+|                                                                               |
+|       +-------------------+   +--------------------+   +------------------+   |
+|       |   [ 0 Breaches ]  |   | [ Quality Breach ] |   | [ Replay/Fatal ] |   |
+|       |       ALLOW       |   |     QUARANTINE     |   |      BLOCK       |   |
+|       +---------+---------+   +---------+----------+   +--------+---------+   |
++-----------------|-----------------------|-----------------------|-------------+
+                  |                       |                       |
+                  v                       v                       v
++-----------------------------+ +---------------------+ +-----------------------+
+| 6. PRIMARY STORAGE LAKE     | | 7. DEAD-LETTER VAULT| | 8. REJECTION DROP     |
+| - PostgreSQL Database       | | - MinIO S3 Vault    | | - System Audit Log    |
+| - MinIO S3 Lakehouse Bucket | | - Incident Registry | | - Discard Buffer      |
++--------------+--------------+ +----------+----------+ +-----------------------+
+               |                           |
+               +-------------+-------------+
+                             |
+                             v
++-------------------------------------------------------------------------------+
+|                  9. FASTAPI CONTROL PLANE & OPERATOR CONSOLE                  |
+|  - REST Endpoints: /health, /metrics, /events, /anomalies, /schema, /quarantine|
+|  - WebSocket Push: ws://localhost:8000/ws/events                              |
+|  - Operator Console: http://localhost:8000/app.html                           |
++-------------------------------------------------------------------------------+
 ```
-
-1. **Backpressure Regulation**: Under sudden spikes exceeding worker capacity, ingestion buffers engage backpressure signaling to upstream message queues (Kafka consumer pause / rate-throttling) rather than buffering unbounded memory.
-2. **Deterministic Checkpoint Rollback**: Every stream tracks the last known uncorrupted micro-batch checkpoint (`cp_00482`). When an anomaly trips the circuit breaker, the ingestion cursor resets to the clean checkpoint while the offending batch is isolated.
-3. **Half-Open Canary Verification**: After an anomaly cooldown window (configurable, default 60s), the circuit breaker enters `HALF-OPEN` and processes a synthetic canary batch to verify schema and data health before resuming full production throughput.
 
 ---
 
-## 6. Quickstart & Local Setup
+## 4. Ingestion & Canonical Event Format
 
-### 6.1 Prerequisites
-- Python 3.10+ (Python 3.11 or 3.12 recommended)
-- Git & Docker (optional for containerized deployment)
+All external streams are ingested, deduplicated, and mapped into a domain-agnostic `NormalizedEvent` envelope before publishing to Kafka:
 
-### 6.2 Local Installation
+```json
+{
+  "event_id": "usgs_ak024251g8s",
+  "source": "usgs",
+  "event_timestamp": "2026-09-19T11:43:39.386000+00:00",
+  "ingestion_timestamp": "2026-09-19T11:43:40.120000+00:00",
+  "schema_version": "v1.0.0",
+  "payload": {
+    "magnitude": 1.4,
+    "place": "26 km NNE of Karluk, Alaska",
+    "longitude": -154.303,
+    "latitude": 57.788,
+    "depth": 57.3,
+    "mag_type": "ml",
+    "status": "automatic",
+    "tsunami": 0,
+    "significance": 30
+  }
+}
+```
+
+### Event ID Hashing Policy
+- **Deterministic Streams**: Hash computed as `SHA-256(source + payload_json + event_timestamp)` ensuring idempotency across re-deliveries.
+- **USGS Real-Time Stream**: Prefixed stable feature identifier `usgs_{feature_id}`. Unchanged features are deduplicated in memory; updated features with newer timestamps propagate immediately.
+
+---
+
+## 5. Stream Quality & Integrity Guards
+
+OXYS evaluates 5 continuous mathematical and structural guards per micro-batch:
+
+| Guard | Identifier | Metric & Algorithm | Failure Threshold | Action |
+| :--- | :--- | :--- | :--- | :--- |
+| **Schema Integrity** | `schema` | Type assertions against registered schema registry | $> 0$ type errors | `QUARANTINE` |
+| **Null Rate** | `null_rate` | Rolling average null field frequency over $N$ batches | $> 15.00\%$ null fields | `QUARANTINE` |
+| **Cardinality** | `cardinality` | Normalized Shannon entropy: $H = -\sum p_i \log_2 p_i$ | $< 0.40$ entropy | `QUARANTINE` |
+| **Distribution** | `distribution` | Standard deviation Z-score: $Z = \frac{\|x - \mu\|}{\sigma}$ | $Z > 3.50$ | `QUARANTINE` |
+| **Event Integrity** | `integrity` | Sliding deduplication set over 1,000 recent event IDs | $\ge 1$ duplicate replayed | `BLOCK` |
+
+---
+
+## 6. Kinetic Circuit Breaker FSM
+
+The Circuit Breaker enforces strict containment states:
+
+```
+           +---------------------------------------+
+           |                                       |
+           v                                       |
+      +----------+      Anomaly Breach        +----------+
+      |  CLOSED  | -------------------------> |   OPEN   |
+      | (Normal) |                            | (Isolate)|
+      +----------+                            +----------+
+           ^                                       |
+           |          Probe Succeeded              | Cooldown Elapsed
+           +----------------------------------+    v
+                                         +-----------+
+                                         | HALF-OPEN |
+                                         |  (Canary) |
+                                         +-----------+
+```
+
+1. **`CLOSED`**: Micro-batches pass all guard invariants; data commits to primary lakehouse and database.
+2. **`OPEN`**: Threshold breached; anomalous batch is diverted to `s3://oxys-quarantine/` and an incident is declared.
+3. **`HALF-OPEN`**: Cooldown window expires; canary micro-batch is evaluated. If valid, state returns to `CLOSED`.
+
+---
+
+## 7. Quickstart & Installation
+
+### 7.1 Prerequisites
+
+- **Python**: `3.11+`
+- **Docker & Docker Compose** (Optional, for running Apache Kafka and MinIO services locally)
+
+### 7.2 Local Setup
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/Sivasakthi-Vengatesan/streampulse.git
-cd streampulse
+# 1. Clone repository
+git clone https://github.com/Sivasakthi-Vengatesan/oxys.git
+cd oxys
 
-# 2. Create and activate a dedicated virtual environment
+# 2. Create and activate virtual environment
 python -m venv venv
+# On Windows:
+.\venv\Scripts\activate
 # On Linux/macOS:
 source venv/bin/activate
-# On Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
 
-# 3. Install production dependencies
+# 3. Install dependencies
 pip install -r requirements.txt
+
+# 4. Configure environment variables
+cp .env.example .env
+
+# 5. Start the local server
+python -m uvicorn server.main:app --host 0.0.0.0 --port 8000
 ```
 
-### 6.3 Environment Configuration
-
-Create a `.env` file in the project root:
-
-```env
-HOST=0.0.0.0
-PORT=8000
-LOG_LEVEL=info
-CIRCUIT_AUTO_RESET_SEC=60
-NULL_RATE_THRESHOLD=15.00
-VOLUME_SPIKE_THRESHOLD=50.00
-QUARANTINE_STORAGE_PATH=s3://streampulse-quarantine
-```
-
-### 6.4 Launching the Service
+### 7.3 Docker Compose Setup (Full Stack)
 
 ```bash
-# Run with Uvicorn in development mode
-uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
-
-# Or execute with production multi-worker configuration
-uvicorn server.main:app --host 0.0.0.0 --port 8000 --workers 4 --loop uvloop
+# Launch Kafka, Zookeeper, PostgreSQL, MinIO, and OXYS Engine
+docker-compose up -d
 ```
 
-Access the interactive endpoints:
-- **Web UI & Operator Console**: `http://localhost:8000/` or `http://localhost:8000/app`
-- **Swagger / OpenAPI Documentation**: `http://localhost:8000/docs`
-- **ReDoc Interactive Reference**: `http://localhost:8000/redoc`
-
-### 6.5 Running via Docker
+### 7.4 Verification
 
 ```bash
-# Build and run using Docker Compose
-docker-compose up --build -d
+# Verify health endpoint
+curl -s http://localhost:8000/health | jq .
 
-# Check live service logs
-docker-compose logs -f
+# Verify streaming metrics
+curl -s http://localhost:8000/metrics | jq .
+```
+
+Access the **OXYS Operator Console** at [http://localhost:8000/app.html](http://localhost:8000/app.html).
+
+---
+
+## 8. Configuration & Environment Variables
+
+| Variable | Description | Default | Required |
+| :--- | :--- | :--- | :--- |
+| `HOST` | Server bind host address | `0.0.0.0` | No |
+| `PORT` | Server bind port | `8000` | No |
+| `LOG_LEVEL` | Python logging severity level | `info` | No |
+| `USGS_FEED_URL` | Live USGS GeoJSON feed endpoint | `https://earthquake.usgs.gov/.../all_hour.geojson` | No |
+| `USGS_POLL_INTERVAL_SECONDS` | USGS feed polling interval in seconds | `60` | No |
+| `KAFKA_BOOTSTRAP_SERVERS` | Kafka broker connection string | `localhost:9092` | No |
+| `KAFKA_RAW_TOPIC` | Kafka topic for raw ingested payloads | `oxys.raw` | No |
+| `KAFKA_NORMALIZED_TOPIC` | Kafka topic for normalized envelopes | `oxys.normalized` | No |
+| `KAFKA_QUARANTINE_TOPIC` | Kafka dead-letter topic | `oxys.quarantine` | No |
+| `DATABASE_URL` | Database connection string (PostgreSQL or SQLite) | `sqlite:///./oxys.db` | No |
+| `MINIO_ENDPOINT` | MinIO / S3 Object Storage endpoint | `localhost:9000` | No |
+| `MINIO_ACCESS_KEY` | S3 Access Key | `minioadmin` | No |
+| `MINIO_SECRET_KEY` | S3 Secret Key | `minioadmin` | No |
+| `MINIO_QUARANTINE_BUCKET`| S3 Bucket for isolated quarantine batches | `oxys-quarantine` | No |
+| `NULL_RATE_THRESHOLD` | Maximum tolerated percentage of null fields | `15.00` | No |
+| `CARDINALITY_MIN_THRESHOLD` | Minimum Shannon entropy for partition keys | `0.40` | No |
+| `DISTRIBUTION_Z_THRESHOLD` | Maximum standard deviation Z-score for metrics | `3.50` | No |
+
+---
+
+## 9. API Reference & Control Plane
+
+### Core Endpoints
+
+#### `GET /health`
+Returns service liveness, circuit breaker status, and storage connectivity.
+```json
+{
+  "status": "HEALTHY",
+  "system_status": "ONLINE",
+  "database": "CONNECTED",
+  "storage": "CONNECTED",
+  "circuit_breaker": "CLOSED",
+  "timestamp": "2026-09-19T12:00:00.000Z"
+}
+```
+
+#### `GET /metrics`
+Returns real-time processing statistics and calculated streaming null rates.
+```json
+{
+  "events_processed": 157000,
+  "events_allowed": 156820,
+  "events_quarantined": 180,
+  "events_blocked": 0,
+  "anomaly_count": 180,
+  "null_rate_pct": 0.0,
+  "cardinality_entropy": 0.88,
+  "circuit_state": "CLOSED",
+  "pipeline_health": "OPTIMAL"
+}
+```
+
+#### `GET /events?limit=50`
+Fetches verified streaming records persisted to the database.
+
+#### `GET /schema`
+Returns the expected schema baseline and active validation policies.
+
+#### `GET /api/quarantine`
+Returns all isolated dead-letter batches stored in `s3://oxys-quarantine/` with diagnostic metadata.
+
+#### `POST /api/circuit/{action}`
+Controls circuit state (`trip`, `reset`, `half-open`).
+
+---
+
+## 10. Testing & Controlled Chaos Verification
+
+The project includes an automated test suite verifying data source normalization, detector mathematics, storage persistence, and fault injection.
+
+```bash
+# Run complete test suite (33 tests)
+python -m pytest tests/ -v
+```
+
+### Live USGS End-to-End Pipeline Trace
+Execute the real-world end-to-end verification script:
+```bash
+python verify_usgs_live.py
+```
+
+Output trace:
+```text
+[STEP 1] Fetching live data from USGS GeoJSON Feed...
+-> Successfully ingested and normalized 14 earthquake features from USGS.
+-> Sample Event ID: usgs_aka2026sozelf
+-> Payload: {"magnitude": 1.4, "place": "26 km NNE of Karluk, Alaska", "longitude": -154.303, "latitude": 57.788, "depth": 57.3}
+
+[STEP 2] Dispatching to Kafka Producer (oxys.raw)...
+-> Target Topic: oxys.normalized
+
+[STEP 3] Executing OXYS Stream Processor & Detection Guards...
+-> Spark Batch ID: #00483
+-> OXYS Decision: ALLOW
+-> Circuit Breaker State: CLOSED
+
+[STEP 4] Verifying PostgreSQL / SQLite Database Record...
+-> Database Event Found by ID (usgs_aka2026sozelf): True
+
+[STEP 5] Querying FastAPI Endpoints...
+-> GET /health: status=HEALTHY, circuit=CLOSED
+-> GET /metrics: events_processed=2361, null_rate=0.0%
+
+[STEP 6] Executing Controlled Dev-Only Fault Injections...
+   [6.1] Schema Drift Injection -> Decision=QUARANTINE, Circuit=OPEN
+   [6.2] Duplicate Replay Storm -> Decision=BLOCK
 ```
 
 ---
 
-## 7. API Reference
+## 11. Contributing
 
-| HTTP Method | Path | Payload / Query | Response Code | Description |
-|---|---|---|---|---|
-| `GET` | `/api/system/status` | None | `200 OK` | Retrieves aggregated cluster status, active streams, and subsystem health. |
-| `GET` | `/api/streams` | None | `200 OK` | Lists all monitored ingestion streams, partition offsets, consumer lags, and rates. |
-| `GET` | `/api/streams/{stream_id}` | Path: `stream_id` (str) | `200 OK` / `404` | Retrieves detailed runtime metrics for a specific streaming topic. |
-| `GET` | `/api/guards` | None | `200 OK` | Fetches active data quality assertion rules, current metrics, and breach status. |
-| `GET` | `/api/circuit` | None | `200 OK` | Inspects current circuit breaker finite-state machine state. |
-| `POST` | `/api/circuit/{action}` | Path: `trip` \| `reset` \| `half-open` | `200 OK` | Manually triggers state transitions on the circuit breaker controller. |
-| `GET` | `/api/quarantine` | None | `200 OK` | Returns all isolated poison-pill batches currently retained in the vault. |
-| `POST` | `/api/quarantine/{id}/replay` | Path: `batch_id` (str) | `200 OK` / `404` | Sanitizes schema and replays quarantined batch downstream. |
-| `POST` | `/api/quarantine/{id}/delete` | Path: `batch_id` (str) | `200 OK` / `404` | Permanently purges a quarantined batch with audit trail generation. |
-| `GET` | `/api/recovery` | None | `200 OK` | Retrieves checkpoint recovery targets and rollback execution history. |
-| `POST` | `/api/recovery/restore` | None | `200 OK` | Restores stream execution to the last valid verified checkpoint offset. |
-| `GET` | `/api/telemetry` | None | `200 OK` | Returns eBPF kernel network metrics alongside application data quality telemetry. |
-| `POST` | `/api/telemetry/correlate` | None | `200 OK` | Performs automated root-cause correlation between infra metrics and data quality. |
-| `GET` | `/api/events` | Query: `category` (optional) | `200 OK` | Retrieves paginated and filtered historical system audit events. |
-| `PUT` | `/api/policies/{policy_id}` | JSON: `{"value": "<new_val>"}` | `200 OK` / `404` | Dynamically updates runtime threshold policies without restarting nodes. |
-| `WS` | `/ws/events` | WebSocket Connection | `101 Switching Protocols` | Continuous real-time bidirectional telemetry and state streaming connection. |
+1. Fork the repository (`https://github.com/Sivasakthi-Vengatesan/oxys`).
+2. Create a feature branch (`git checkout -b feature/streaming-guard-custom`).
+3. Commit your changes with clear messages (`git commit -m 'feat: add streaming histogram drift guard'`).
+4. Ensure all tests pass (`python -m pytest tests/ -v`).
+5. Push to the branch (`git push origin feature/streaming-guard-custom`) and open a Pull Request.
 
 ---
 
-## 8. License
+## 12. Roadmap
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+- [x] Dedicated USGS Real-Time Earthquake GeoJSON Feed Ingestion.
+- [x] Kinetic Circuit Breaker finite-state machine with MinIO S3 dead-letter vaulting.
+- [x] Inline statistical guards (Schema, Null Rate, Shannon Entropy, Z-Score, Dedup).
+- [ ] Apache Iceberg and Delta Lake native sink connectors.
+- [ ] Prometheus metrics export endpoint (`/metrics/prometheus`).
+- [ ] Distributed eBPF network packet loss and latency telemetry probe integration.
+
+---
+
+## 13. License
+
+Distributed under the MIT License. See `LICENSE` for more information.

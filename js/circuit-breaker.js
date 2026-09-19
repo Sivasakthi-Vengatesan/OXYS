@@ -1,5 +1,5 @@
 /* ==========================================================================
-   STREAMPULSE - CIRCUIT BREAKER SUBSYSTEM CONTROLLER
+   OXYS - CIRCUIT BREAKER SUBSYSTEM CONTROLLER
    ========================================================================== */
 
 class CircuitBreakerController {
@@ -7,18 +7,27 @@ class CircuitBreakerController {
     this.store = store;
   }
 
-  manualTrip() {
+  async manualTrip() {
     if (window.RetroAudio) window.RetroAudio.playClick();
+    try {
+      await fetch('/api/circuit/trip', { method: 'POST' });
+    } catch (e) {}
     window.Simulator.injectNullSpike();
   }
 
-  manualReset() {
+  async manualReset() {
     if (window.RetroAudio) window.RetroAudio.playClick();
+    try {
+      await fetch('/api/circuit/reset', { method: 'POST' });
+    } catch (e) {}
     window.Simulator.healSystem();
   }
 
-  manualHalfOpen() {
+  async manualHalfOpen() {
     if (window.RetroAudio) window.RetroAudio.playClick();
+    try {
+      await fetch('/api/circuit/half-open', { method: 'POST' });
+    } catch (e) {}
     this.store.setCircuitState('HALF-OPEN', 'MANUAL_TEST_PROBE');
     this.store.addEventLog('circuit_breaker', 'MANUAL OVERRIDE: HALF-OPEN CANARY PROBE INITIATED', 'INFO');
   }
@@ -45,10 +54,10 @@ class CircuitBreakerController {
     }
 
     if (stateReasonEl) stateReasonEl.textContent = cb.reason || 'NONE';
-    if (stateStreamEl) stateStreamEl.textContent = cb.stream;
-    if (stateBatchEl) stateBatchEl.textContent = cb.batchId;
+    if (stateStreamEl) stateStreamEl.textContent = cb.stream || 'crypto_market_stream';
+    if (stateBatchEl) stateBatchEl.textContent = cb.batchId || cb.batch_id || '#00483';
     if (stateActionEl) {
-      stateActionEl.textContent = (cb.state === 'OPEN' || cb.state === 'QUARANTINE') ? 'QUARANTINE BATCH' : 'COMMITTING CLEAN SINK';
+      stateActionEl.textContent = (cb.state === 'OPEN' || cb.state === 'QUARANTINE') ? 'QUARANTINE BATCH' : 'COMMITTING CLEAN SINK (ALLOW)';
     }
 
     // Update FSM Step highlighting

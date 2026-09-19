@@ -1,9 +1,10 @@
 """
-StreamPulse Pydantic Models & Data Contracts
+OXYS Pydantic Models & Data Contracts
 """
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from datetime import datetime
+
 
 class StreamModel(BaseModel):
     id: str
@@ -20,6 +21,7 @@ class StreamModel(BaseModel):
     status: str
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
+
 class PipelineModel(BaseModel):
     id: str
     name: str
@@ -29,6 +31,7 @@ class PipelineModel(BaseModel):
     sink_dest: str
     state: str
     last_execution: str
+
 
 class GuardModel(BaseModel):
     id: str
@@ -42,6 +45,7 @@ class GuardModel(BaseModel):
     limit: str
     last_evaluated: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
+
 class CircuitBreakerModel(BaseModel):
     state: str  # CLOSED, BREACH DETECTED, OPEN, QUARANTINE, HALF-OPEN, RECOVERED
     stream: str
@@ -50,6 +54,7 @@ class CircuitBreakerModel(BaseModel):
     current_metric: str
     threshold: str
     last_transition: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
 
 class QuarantineBatchModel(BaseModel):
     batch_id: str
@@ -65,6 +70,7 @@ class QuarantineBatchModel(BaseModel):
     poison_records: int
     sample_poison: Dict[str, Any]
 
+
 class CheckpointModel(BaseModel):
     checkpoint_id: str
     stream: str
@@ -72,6 +78,7 @@ class CheckpointModel(BaseModel):
     failed_batch: str
     recovery_status: str
     storage_path: str
+
 
 class EbpfTelemetryModel(BaseModel):
     cpu: float
@@ -82,6 +89,7 @@ class EbpfTelemetryModel(BaseModel):
     retransmits: float
     socket_latency: float
 
+
 class DataQualityTelemetryModel(BaseModel):
     null_rate: float
     schema_status: str
@@ -89,6 +97,7 @@ class DataQualityTelemetryModel(BaseModel):
     cardinality_entropy: float
     z_score_drift: float
     dead_letter_count: int
+
 
 class SystemEventModel(BaseModel):
     id: str
@@ -98,6 +107,7 @@ class SystemEventModel(BaseModel):
     tag: str  # HEALTHY, ALERT, INFO, RECOVERY, CONFIG
     category: str  # STREAM, GUARD, CIRCUIT, QUARANTINE, RECOVERY, INFRASTRUCTURE
 
+
 class PolicyModel(BaseModel):
     id: str
     name: str
@@ -105,6 +115,7 @@ class PolicyModel(BaseModel):
     unit: str
     description: str
     current_state: str
+
 
 class IncidentModel(BaseModel):
     id: str

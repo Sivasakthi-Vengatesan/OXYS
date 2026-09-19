@@ -1,5 +1,5 @@
 /* ==========================================================================
-   STREAMPULSE - 8-BIT RETRO AUDIO SYNTHESIZER (WEB AUDIO API)
+   OXYS - 8-BIT RETRO AUDIO SYNTHESIZER (WEB AUDIO API)
    ========================================================================== */
 
 class RetroAudioSynth {
