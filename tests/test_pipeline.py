@@ -26,12 +26,12 @@ from engine.circuit_breaker import CircuitBreakerFSM, DecisionType
 from engine.processor import processor
 from server.db import db, EventRecord, AnomalyRecord, QuarantinedEventRecord
 from server.storage import storage
-from server.main import app
+from server.main import app as main_app
 
 
 @pytest.fixture(scope="module")
 def client():
-    with TestClient(app) as c:
+    with TestClient(main_app) as c:
         yield c
 
 

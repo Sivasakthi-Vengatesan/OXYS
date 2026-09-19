@@ -22,8 +22,6 @@ from ingestion.usgs_source import USGSEarthquakeSource
 from ingestion.producer import OxysKafkaProducer
 from engine.processor import processor
 from server.db import db
-from fastapi.testclient import TestClient
-from server.main import app
 
 def run_live_verification():
     print("=" * 60)
