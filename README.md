@@ -60,68 +60,103 @@ In event-driven stream architectures, unvalidated upstream bugs—such as silent
 
 ## 3. Architecture & Data Flow
 
-```
-+-------------------------------------------------------------------------------+
-|                        1. REAL EXTERNAL DATA SOURCES                          |
-|  - USGS Earthquake GeoJSON Feed (Continuous Seismic Telemetry)                |
-|  - Binance Market Ticker Stream (Live Trade Figures)                          |
-|  - Open-Meteo Telemetry Stream (Atmospheric Stations)                         |
-+---------------------------------------+---------------------------------------+
-                                        |
-                                        v
-+-------------------------------------------------------------------------------+
-|                      2. INGESTION & DEDUPLICATION LAYER                       |
-|  - Ingestion Adapter (Poll & Fetch)                                           |
-|  - State-Aware Deduplication Cache (feature_id -> updated_timestamp)          |
-|  - Canonical Event Envelope Normalizer                                        |
-|  - OxysKafkaProducer (Deterministic Event Hashing)                            |
-+---------------------------------------+---------------------------------------+
-                                        |
-                                        v
-+-------------------------------------------------------------------------------+
-|                             3. APACHE KAFKA LOG                               |
-|  - Topic: oxys.raw           (Raw Ingested Events)                            |
-|  - Topic: oxys.normalized    (Canonical Envelopes)                            |
-|  - Topic: oxys.quarantine    (Malformed Payloads)                             |
-+---------------------------------------+---------------------------------------+
-                                        |
-                                        v
-+-------------------------------------------------------------------------------+
-|           4. SPARK STRUCTURED STREAMING & OXYS DETECTION ENGINE               |
-|  - Micro-Batch Stream Processor (Consumer Group: oxys-spark-cg)               |
-|  - Guard 1: Schema Drift & Type Contract Verification                         |
-|  - Guard 2: Rolling Window Null Rate (Threshold <= 15.00%)                   |
-|  - Guard 3: Cardinality & Shannon Entropy (Diversity > 0.40)                  |
-|  - Guard 4: Statistical Distribution Outlier (Z-Score < 3.50)                 |
-|  - Guard 5: Duplicate Replay Storm Dedup Window                               |
-+---------------------------------------+---------------------------------------+
-                                        |
-                                        v
-+-------------------------------------------------------------------------------+
-|                    5. KINETIC CIRCUIT BREAKER ROUTING                         |
-|                                                                               |
-|       +-------------------+   +--------------------+   +------------------+   |
-|       |   [ 0 Breaches ]  |   | [ Quality Breach ] |   | [ Replay/Fatal ] |   |
-|       |       ALLOW       |   |     QUARANTINE     |   |      BLOCK       |   |
-|       +---------+---------+   +---------+----------+   +--------+---------+   |
-+-----------------|-----------------------|-----------------------|-------------+
-                  |                       |                       |
-                  v                       v                       v
-+-----------------------------+ +---------------------+ +-----------------------+
-| 6. PRIMARY STORAGE LAKE     | | 7. DEAD-LETTER VAULT| | 8. REJECTION DROP     |
-| - PostgreSQL Database       | | - MinIO S3 Vault    | | - System Audit Log    |
-| - MinIO S3 Lakehouse Bucket | | - Incident Registry | | - Discard Buffer      |
-+--------------+--------------+ +----------+----------+ +-----------------------+
-               |                           |
-               +-------------+-------------+
-                             |
-                             v
-+-------------------------------------------------------------------------------+
-|                  9. FASTAPI CONTROL PLANE & OPERATOR CONSOLE                  |
-|  - REST Endpoints: /health, /metrics, /events, /anomalies, /schema, /quarantine|
-|  - WebSocket Push: ws://localhost:8000/ws/events                              |
-|  - Operator Console: http://localhost:8000/app.html                           |
-+-------------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    %% -------------------------------------------------------------
+    %% Style Definitions
+    %% -------------------------------------------------------------
+    classDef sourceStyle fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef ingestStyle fill:#0f172a,stroke:#818cf8,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef kafkaStyle fill:#18181b,stroke:#f59e0b,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef guardStyle fill:#0c4a6e,stroke:#0284c7,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef decisionAllow fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef decisionQuarantine fill:#78350f,stroke:#f59e0b,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef decisionBlock fill:#7f1d1d,stroke:#ef4444,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef storageStyle fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef uiStyle fill:#172554,stroke:#60a5fa,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+
+    %% -------------------------------------------------------------
+    %% 1. Ingestion Layer
+    %% -------------------------------------------------------------
+    subgraph INGESTION ["📡 1. REAL EXTERNAL DATA INGESTION"]
+        SRC_USGS["🌐 USGS Live Feed<br/><i>(Seismic GeoJSON)</i>"]:::sourceStyle
+        SRC_CRYPTO["📈 Binance Ticker<br/><i>(Market Stream)</i>"]:::sourceStyle
+        SRC_METEO["🌦️ Open-Meteo<br/><i>(Atmospheric API)</i>"]:::sourceStyle
+
+        ADAPTER["⚙️ Ingestion Adapter & Normalizer<br/>• Window Deduplication<br/>• Schema Standardization<br/>• Canonical Envelope Hash"]:::ingestStyle
+
+        SRC_USGS --> ADAPTER
+        SRC_CRYPTO --> ADAPTER
+        SRC_METEO --> ADAPTER
+    end
+
+    %% -------------------------------------------------------------
+    %% 2. Messaging Backbone
+    %% -------------------------------------------------------------
+    subgraph BROKER ["⚡ 2. DISTRIBUTED STREAMING BACKBONE (APACHE KAFKA)"]
+        TOPIC_RAW[("📦 Topic: oxys.raw<br/><i>Raw Ingested Events</i>")]:::kafkaStyle
+        TOPIC_NORM[("📦 Topic: oxys.normalized<br/><i>Canonical Envelopes</i>")]:::kafkaStyle
+        
+        ADAPTER --> TOPIC_RAW
+        TOPIC_RAW --> TOPIC_NORM
+    end
+
+    %% -------------------------------------------------------------
+    %% 3. OXYS Detection Engine
+    %% -------------------------------------------------------------
+    subgraph ENGINE ["🛡️ 3. SPARK STRUCTURED STREAMING & OXYS INLINE DETECTION ENGINE"]
+        direction TB
+        MICROBATCH["🔄 In-Memory Micro-Batch Processor<br/><i>(Continuous Sliding Windows)</i>"]:::guardStyle
+        
+        subgraph GUARDS ["Five Sub-Millisecond Integrity Guards"]
+            G1["🔍 1. Schema Drift & Type Contract"]:::guardStyle
+            G2["📊 2. Rolling Null-Rate Monitor"]:::guardStyle
+            G3["🎲 3. Shannon Entropy & Cardinality"]:::guardStyle
+            G4["📈 4. Z-Score Outlier Distribution"]:::guardStyle
+            G5["🔒 5. Sliding-Window Duplicate Replay"]:::guardStyle
+        end
+
+        TOPIC_NORM --> MICROBATCH
+        MICROBATCH --> G1 & G2 & G3 & G4 & G5
+    end
+
+    %% -------------------------------------------------------------
+    %% 4. Decision Gate
+    %% -------------------------------------------------------------
+    subgraph ROUTING ["⚖️ 4. THREE-TIER KINETIC DECISION GATE"]
+        D_ALLOW{"🟢 <b>ALLOW</b><br/>0 Breaches Detected"}:::decisionAllow
+        D_QUARANTINE{"🟡 <b>QUARANTINE</b><br/>Quality / Schema Breach"}:::decisionQuarantine
+        D_BLOCK{"🔴 <b>BLOCK</b><br/>Replay Storm / Malformed"}:::decisionBlock
+
+        G1 & G2 & G3 & G4 & G5 --> D_ALLOW
+        G1 & G2 & G3 & G4 & G5 --> D_QUARANTINE
+        G1 & G2 & G3 & G4 & G5 --> D_BLOCK
+    end
+
+    %% -------------------------------------------------------------
+    %% 5. Storage Tier
+    %% -------------------------------------------------------------
+    subgraph STORAGE ["💾 5. PERSISTENCE & STORAGE TIER"]
+        DB_CLEAN[("🗄️ PostgreSQL / Lakehouse<br/><b>Verified Clean Records</b>")]:::storageStyle
+        S3_VAULT[("🪣 MinIO / S3 Vault<br/><b>s3://oxys-quarantine/</b><br/><i>Immutable Parquet Batches</i>")]:::storageStyle
+        LOG_AUDIT[("📋 System Audit Log<br/><b>Dropped Event Discard Buffer</b>")]:::storageStyle
+
+        D_ALLOW -->|Direct Ingestion| DB_CLEAN
+        D_QUARANTINE -->|Isolate Batch & Register Incident| S3_VAULT
+        D_BLOCK -->|Immediate Rejection Drop| LOG_AUDIT
+    end
+
+    %% -------------------------------------------------------------
+    %% 6. Control Plane
+    %% -------------------------------------------------------------
+    subgraph CONTROL ["🎛️ 6. OPERATOR CONTROL PLANE & TELEMETRY"]
+        FASTAPI["⚡ FastAPI Backend Engine<br/>• REST APIs (/metrics, /health, /quarantine)<br/>• WebSockets (/ws/events)"]:::uiStyle
+        DASHBOARD["🖥️ OXYS Operations Dashboard<br/>• Live Streaming DAG Visualizer<br/>• Circuit Breaker FSM Manual Control<br/>• Real-Time Threat Telemetry Matrix"]:::uiStyle
+
+        DB_CLEAN -.-> FASTAPI
+        S3_VAULT -.-> FASTAPI
+        FASTAPI <===> DASHBOARD
+    end
 ```
 
 ---
@@ -166,7 +201,7 @@ OXYS evaluates 5 continuous mathematical and structural guards per micro-batch:
 | **Schema Integrity** | `schema` | Type assertions against registered schema registry | $> 0$ type errors | `QUARANTINE` |
 | **Null Rate** | `null_rate` | Rolling average null field frequency over $N$ batches | $> 15.00\%$ null fields | `QUARANTINE` |
 | **Cardinality** | `cardinality` | Normalized Shannon entropy: $H = -\sum p_i \log_2 p_i$ | $< 0.40$ entropy | `QUARANTINE` |
-| **Distribution** | `distribution` | Standard deviation Z-score: $Z = \frac{\|x - \mu\|}{\sigma}$ | $Z > 3.50$ | `QUARANTINE` |
+| **Distribution** | `distribution` | Standard deviation Z-score: $Z = \frac{|x - \mu|}{\sigma}$ | $Z > 3.50$ | `QUARANTINE` |
 | **Event Integrity** | `integrity` | Sliding deduplication set over 1,000 recent event IDs | $\ge 1$ duplicate replayed | `BLOCK` |
 
 ---
@@ -175,21 +210,34 @@ OXYS evaluates 5 continuous mathematical and structural guards per micro-batch:
 
 The Circuit Breaker enforces strict containment states:
 
-```
-           +---------------------------------------+
-           |                                       |
-           v                                       |
-      +----------+      Anomaly Breach        +----------+
-      |  CLOSED  | -------------------------> |   OPEN   |
-      | (Normal) |                            | (Isolate)|
-      +----------+                            +----------+
-           ^                                       |
-           |          Probe Succeeded              | Cooldown Elapsed
-           +----------------------------------+    v
-                                         +-----------+
-                                         | HALF-OPEN |
-                                         |  (Canary) |
-                                         +-----------+
+```mermaid
+stateDiagram-v2
+    [*] --> CLOSED : Initialize System Baseline
+
+    state CLOSED {
+        [*] --> VerifyingMicroBatches
+        VerifyingMicroBatches --> HealthyCommit : All 5 Guards Pass
+        HealthyCommit --> VerifyingMicroBatches
+    }
+
+    CLOSED --> OPEN : Anomaly Ratio >= Trip Threshold (40%)\nor Critical Schema Breach
+    
+    state OPEN {
+        [*] --> IsolateTraffic
+        IsolateTraffic --> DivertToS3Quarantine : Route Batches to s3://oxys-quarantine/
+        DivertToS3Quarantine --> TriggerAlertNotification : Raise Incident in Event Log
+    }
+
+    OPEN --> HALF_OPEN : Cooldown Window Elapsed (60s)
+    
+    state HALF_OPEN {
+        [*] --> EvaluateCanaryBatch
+        EvaluateCanaryBatch --> CanarySuccess : Batch Passes 100% Guards
+        EvaluateCanaryBatch --> CanaryFailure : Anomaly Detected
+    }
+
+    HALF_OPEN --> CLOSED : Canary Passed (Traffic Restored)
+    HALF_OPEN --> OPEN : Canary Failed (Trip Reset)
 ```
 
 1. **`CLOSED`**: Micro-batches pass all guard invariants; data commits to primary lakehouse and database.
