@@ -5,8 +5,12 @@ import logging
 
 logger = logging.getLogger("oxys.api")
 
-# Add parent directory to path so server module can be imported
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Ensure project root is first in sys.path
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
+os.environ["VERCEL"] = "1"
 
 try:
     from server.main import app

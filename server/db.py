@@ -112,16 +112,33 @@ class PipelineMetricRecord(Base):
 
 
 class DatabaseManager:
-    def __init__(self, db_url: Optional[str] = None):
         import tempfile
-        is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
-        temp_sqlite = f"sqlite:///{os.path.join(tempfile.gettempdir(), 'oxys.db')}"
-        
-        raw_url = db_url or os.getenv("DATABASE_URL", os.getenv("POSTGRES_URL", temp_sqlite if is_serverless else "sqlite:///./oxys.db"))
+        is_serverless = bool(
+            os.getenv("VERCEL") or 
+            os.getenv("AWS_LAMBDA_FUNCTION_NAME") or 
+            os.getenv("SERVERLESS") or
+            not os.access(os.path.dirname(__file__), os.W_OK)
+        )
+
+        default_url = "sqlite:///./oxys.db"
+        if is_serverless:
+            tmp_db_path = os.path.join(tempfile.gettempdir(), "oxys.db")
+            local_seed = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "oxys.db"))
+            if os.path.exists(local_seed) and not os.path.exists(tmp_db_path):
+                try:
+                    import shutil
+                    shutil.copyfile(local_seed, tmp_db_path)
+                except Exception:
+                    pass
+            default_url = f"sqlite:///{tmp_db_path}"
+
+        raw_url = db_url or os.getenv("DATABASE_URL", os.getenv("POSTGRES_URL", default_url))
         
         # Clean postgres scheme for SQLAlchemy
         if raw_url.startswith("postgres://"):
-            raw_url = raw_url.replace("postgres://", "postgresql://", 1)
+            raw_url = raw_url.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif raw_url.startswith("postgresql://") and "+psycopg2" not in raw_url:
+            raw_url = raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
         self.db_url = raw_url
         connect_args = {"check_same_thread": False} if self.db_url.startswith("sqlite") else {}
@@ -132,9 +149,9 @@ class DatabaseManager:
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
             logger.info(f"Database initialized with URL: {self.db_url.split('@')[-1] if '@' in self.db_url else self.db_url}")
         except Exception as e:
-            logger.warning(f"Could not connect to configured DB ({e}). Falling back to temp SQLite database.")
+            logger.warning(f"Could not connect to configured DB ({e}). Falling back to temp / in-memory SQLite database.")
             try:
-                self.db_url = temp_sqlite
+                self.db_url = f"sqlite:///{os.path.join(tempfile.gettempdir(), 'oxys.db')}" if is_serverless else "sqlite:///./oxys.db"
                 self.engine = create_engine(self.db_url, connect_args={"check_same_thread": False})
                 Base.metadata.create_all(bind=self.engine)
                 self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
@@ -142,7 +159,7 @@ class DatabaseManager:
                 logger.warning(f"File SQLite failed ({e2}). Using in-memory database.")
                 from sqlalchemy.pool import StaticPool
                 self.db_url = "sqlite:///:memory:"
-                self.engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+                self.engine = create_engine(self.db_url, connect_args={"check_same_thread": False}, poolclass=StaticPool)
                 Base.metadata.create_all(bind=self.engine)
                 self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
 

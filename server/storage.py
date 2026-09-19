@@ -34,9 +34,14 @@ class MinIOStorageManager:
         self.client = None
         self._connected = False
         
-        # Determine writable local storage directory
         import tempfile
-        if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        is_serverless = bool(
+            os.getenv("VERCEL") or 
+            os.getenv("AWS_LAMBDA_FUNCTION_NAME") or 
+            os.getenv("SERVERLESS") or
+            not os.access(os.path.dirname(__file__), os.W_OK)
+        )
+        if is_serverless:
             self._local_storage_dir = os.path.join(tempfile.gettempdir(), ".oxys_storage")
         else:
             try:
@@ -50,6 +55,7 @@ class MinIOStorageManager:
             os.makedirs(self._local_storage_dir, exist_ok=True)
         except Exception:
             pass
+
         self.connect()
 
     def connect(self) -> bool:

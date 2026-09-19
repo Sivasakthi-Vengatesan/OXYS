@@ -2,6 +2,7 @@
 OXYS Backend Engine & State Controller
 Bridges Real Streaming Processor, PostgreSQL Database, MinIO Storage, and FastAPI.
 """
+import os
 import time
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
@@ -19,14 +20,26 @@ class OxysEngine:
 
     def start_services(self):
         if not self._services_started:
-            ingestion_service.start()
-            spark_runner.start()
+            is_serverless = bool(
+                os.getenv("VERCEL") or 
+                os.getenv("AWS_LAMBDA_FUNCTION_NAME") or 
+                os.getenv("SERVERLESS")
+            )
+            if not is_serverless:
+                try:
+                    ingestion_service.start()
+                    spark_runner.start()
+                except Exception as e:
+                    pass
             self._services_started = True
 
     def stop_services(self):
         if self._services_started:
-            ingestion_service.stop()
-            spark_runner.stop()
+            try:
+                ingestion_service.stop()
+                spark_runner.stop()
+            except Exception:
+                pass
             self._services_started = False
 
     @property
