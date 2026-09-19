@@ -11,7 +11,6 @@ import math
 import time
 from typing import Dict, Any, List, Optional, Tuple, Set
 from collections import deque, Counter
-import numpy as np
 
 
 class DetectorResult:
@@ -280,9 +279,10 @@ class DistributionDetector:
             z_score = 0.0
         else:
             if len(self.history) >= 5:
-                arr = np.array(self.history)
-                mean = float(np.mean(arr))
-                std = float(np.std(arr))
+                n = len(self.history)
+                mean = sum(self.history) / n
+                variance = sum((x - mean) ** 2 for x in self.history) / n
+                std = math.sqrt(variance)
                 if std > 1e-6:
                     z_score = abs((float(val) - mean) / std)
                 else:
