@@ -13,3 +13,9 @@ if root_dir not in sys.path:
 os.environ["VERCEL"] = "1"
 
 from server.main import app
+
+try:
+    from mangum import Mangum
+    handler = Mangum(app, lifespan="off")
+except Exception:
+    handler = app

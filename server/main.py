@@ -7,7 +7,7 @@ from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 import os
 from datetime import datetime
 
@@ -411,7 +411,11 @@ base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 async def serve_index():
     index_file = os.path.join(base_dir, "index.html")
     if os.path.exists(index_file):
-        return FileResponse(index_file)
+        try:
+            with open(index_file, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
+        except Exception:
+            return FileResponse(index_file)
     return {"message": "OXYS API Online", "health": "/api/health", "docs": "/docs"}
 
 
@@ -420,7 +424,11 @@ async def serve_index():
 async def serve_app():
     app_file = os.path.join(base_dir, "app.html")
     if os.path.exists(app_file):
-        return FileResponse(app_file)
+        try:
+            with open(app_file, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
+        except Exception:
+            return FileResponse(app_file)
     return {"message": "OXYS App Online"}
 
 
