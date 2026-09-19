@@ -3,6 +3,7 @@
 > **Domain-Agnostic Real-Time Streaming Data Integrity and Anomaly Protection Engine.**  
 > OXYS provides inline streaming assertions across distributed messaging backbones, isolating schema drift, null-rate spikes, cardinality collapse, and duplicate replay storms before bad data contaminates downstream lakehouses and analytics systems.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-oxys.onrender.com-brightgreen?style=flat-square&logo=render&logoColor=white)](https://oxys.onrender.com)
 [![CI Pipeline](https://img.shields.io/badge/CI-Passing-brightgreen?style=flat-square&logo=githubactions&logoColor=white)](tests/)
 [![Python Version](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -11,6 +12,9 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![MinIO](https://img.shields.io/badge/MinIO-S3%20Lakehouse-C72C48?style=flat-square&logo=minio&logoColor=white)](https://min.io/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+
+🌐 **Live Deployment**: [https://oxys.onrender.com](https://oxys.onrender.com) | **Console UI**: [https://oxys.onrender.com/app](https://oxys.onrender.com/app) | **API Docs**: [https://oxys.onrender.com/docs](https://oxys.onrender.com/docs)
+
 
 ---
 
