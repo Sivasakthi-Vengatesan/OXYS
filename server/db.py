@@ -113,6 +113,15 @@ class PipelineMetricRecord(Base):
 
 class DatabaseManager:
     def __init__(self, db_url: Optional[str] = None):
+        self._custom_url = db_url
+        self._engine = None
+        self._SessionLocal = None
+        self._initialized = False
+        self.db_url = db_url or "sqlite:///./oxys.db"
+
+    def _ensure_init(self):
+        if self._initialized:
+            return
         import tempfile
         is_serverless = bool(
             os.getenv("VERCEL") or 
@@ -123,7 +132,7 @@ class DatabaseManager:
 
         default_url = "sqlite:///./oxys.db"
         if is_serverless:
-            default_url = f"sqlite:///{os.path.join(tempfile.gettempdir(), 'oxys.db')}"
+            default_url = "sqlite:///:memory:"
 
         db_url_env = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
         # Only use postgres if psycopg2 is installed and not in serverless fallback
@@ -134,7 +143,7 @@ class DatabaseManager:
             except ImportError:
                 raw_url = default_url
         else:
-            raw_url = db_url or default_url
+            raw_url = self._custom_url or default_url
         
         # Clean postgres scheme for SQLAlchemy
         if raw_url.startswith("postgres://"):
@@ -144,27 +153,37 @@ class DatabaseManager:
         connect_args = {"check_same_thread": False} if self.db_url.startswith("sqlite") else {}
         
         try:
-            self.engine = create_engine(self.db_url, connect_args=connect_args, pool_pre_ping=True)
-            Base.metadata.create_all(bind=self.engine)
-            self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+            from sqlalchemy.pool import StaticPool
+            if self.db_url == "sqlite:///:memory:":
+                self._engine = create_engine(self.db_url, connect_args=connect_args, poolclass=StaticPool)
+            else:
+                self._engine = create_engine(self.db_url, connect_args=connect_args, pool_pre_ping=True)
+            Base.metadata.create_all(bind=self._engine)
+            self._SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
             logger.info(f"Database initialized with URL: {self.db_url.split('@')[-1] if '@' in self.db_url else self.db_url}")
         except Exception as e:
-            logger.warning(f"Could not connect to configured DB ({e}). Falling back to temp / in-memory SQLite database.")
-            try:
-                self.db_url = f"sqlite:///{os.path.join(tempfile.gettempdir(), 'oxys.db')}" if is_serverless else "sqlite:///./oxys.db"
-                self.engine = create_engine(self.db_url, connect_args={"check_same_thread": False})
-                Base.metadata.create_all(bind=self.engine)
-                self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
-            except Exception as e2:
-                logger.warning(f"File SQLite failed ({e2}). Using in-memory database.")
-                from sqlalchemy.pool import StaticPool
-                self.db_url = "sqlite:///:memory:"
-                self.engine = create_engine(self.db_url, connect_args={"check_same_thread": False}, poolclass=StaticPool)
-                Base.metadata.create_all(bind=self.engine)
-                self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+            logger.warning(f"Could not connect to configured DB ({e}). Falling back to in-memory SQLite database.")
+            from sqlalchemy.pool import StaticPool
+            self.db_url = "sqlite:///:memory:"
+            self._engine = create_engine(self.db_url, connect_args={"check_same_thread": False}, poolclass=StaticPool)
+            Base.metadata.create_all(bind=self._engine)
+            self._SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self._engine)
+        
+        self._initialized = True
+
+    @property
+    def engine(self):
+        self._ensure_init()
+        return self._engine
+
+    @property
+    def SessionLocal(self):
+        self._ensure_init()
+        return self._SessionLocal
 
     def get_session(self) -> Session:
-        return self.SessionLocal()
+        self._ensure_init()
+        return self._SessionLocal()
 
     def record_event(
         self,
