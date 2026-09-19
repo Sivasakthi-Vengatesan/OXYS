@@ -113,13 +113,17 @@ class PipelineMetricRecord(Base):
 
 class DatabaseManager:
     def __init__(self, db_url: Optional[str] = None):
-        self.db_url = db_url or os.getenv("DATABASE_URL", os.getenv("POSTGRES_URL", "sqlite:///./oxys.db"))
-        # Clean postgres scheme for SQLAlchemy if needed
-        if self.db_url.startswith("postgres://"):
-            self.db_url = self.db_url.replace("postgres://", "postgresql+psycopg2://", 1)
-        elif self.db_url.startswith("postgresql://") and "+psycopg2" not in self.db_url:
-            self.db_url = self.db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        import tempfile
+        is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+        temp_sqlite = f"sqlite:///{os.path.join(tempfile.gettempdir(), 'oxys.db')}"
+        
+        raw_url = db_url or os.getenv("DATABASE_URL", os.getenv("POSTGRES_URL", temp_sqlite if is_serverless else "sqlite:///./oxys.db"))
+        
+        # Clean postgres scheme for SQLAlchemy
+        if raw_url.startswith("postgres://"):
+            raw_url = raw_url.replace("postgres://", "postgresql://", 1)
 
+        self.db_url = raw_url
         connect_args = {"check_same_thread": False} if self.db_url.startswith("sqlite") else {}
         
         try:
@@ -128,11 +132,19 @@ class DatabaseManager:
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
             logger.info(f"Database initialized with URL: {self.db_url.split('@')[-1] if '@' in self.db_url else self.db_url}")
         except Exception as e:
-            logger.warning(f"Could not connect to configured DB ({e}). Falling back to SQLite local database.")
-            self.db_url = "sqlite:///./oxys.db"
-            self.engine = create_engine(self.db_url, connect_args={"check_same_thread": False})
-            Base.metadata.create_all(bind=self.engine)
-            self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+            logger.warning(f"Could not connect to configured DB ({e}). Falling back to temp SQLite database.")
+            try:
+                self.db_url = temp_sqlite
+                self.engine = create_engine(self.db_url, connect_args={"check_same_thread": False})
+                Base.metadata.create_all(bind=self.engine)
+                self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+            except Exception as e2:
+                logger.warning(f"File SQLite failed ({e2}). Using in-memory database.")
+                from sqlalchemy.pool import StaticPool
+                self.db_url = "sqlite:///:memory:"
+                self.engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+                Base.metadata.create_all(bind=self.engine)
+                self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
 
     def get_session(self) -> Session:
         return self.SessionLocal()

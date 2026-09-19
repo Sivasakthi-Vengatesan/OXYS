@@ -25,9 +25,11 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    engine.start_services()
+    if not os.environ.get("VERCEL") and not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        engine.start_services()
     yield
-    engine.stop_services()
+    if not os.environ.get("VERCEL") and not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        engine.stop_services()
 
 app = FastAPI(
     title="OXYS API",
@@ -80,6 +82,7 @@ async def websocket_events_endpoint(websocket: WebSocket):
 # ==========================================
 
 @app.get("/health")
+@app.get("/api/health")
 def get_health():
     return {
         "status": "HEALTHY" if engine.system_status == "ONLINE" else "DEGRADED",
@@ -92,6 +95,7 @@ def get_health():
 
 
 @app.get("/metrics")
+@app.get("/api/metrics")
 def get_metrics():
     summary = db.get_metrics_summary()
     guards = engine.guards
@@ -112,11 +116,13 @@ def get_metrics():
 
 
 @app.get("/events")
+@app.get("/api/events")
 def get_real_events(limit: int = Query(50, ge=1, le=500)):
     return db.get_recent_events(limit=limit)
 
 
 @app.get("/anomalies")
+@app.get("/api/anomalies")
 def get_anomalies():
     metrics = db.get_metrics_summary()
     return {
@@ -126,6 +132,7 @@ def get_anomalies():
 
 
 @app.get("/schema")
+@app.get("/api/schema")
 def get_schema(source: Optional[str] = Query(None)):
     schemas = {
         "usgs": {
@@ -167,11 +174,13 @@ def get_schema(source: Optional[str] = Query(None)):
 
 
 @app.get("/quarantine")
+@app.get("/api/quarantine/all")
 def get_quarantine_all():
     return db.get_quarantined_batches()
 
 
 @app.get("/pipeline/status")
+@app.get("/api/pipeline/status")
 def get_pipeline_status():
     return {
         "pipeline_name": "oxys-real-time-integrity-engine",

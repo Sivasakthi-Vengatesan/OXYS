@@ -33,8 +33,23 @@ class MinIOStorageManager:
 
         self.client = None
         self._connected = False
-        self._local_storage_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".oxys_storage"))
-        os.makedirs(self._local_storage_dir, exist_ok=True)
+        
+        # Determine writable local storage directory
+        import tempfile
+        if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+            self._local_storage_dir = os.path.join(tempfile.gettempdir(), ".oxys_storage")
+        else:
+            try:
+                candidate = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".oxys_storage"))
+                os.makedirs(candidate, exist_ok=True)
+                self._local_storage_dir = candidate
+            except (OSError, PermissionError):
+                self._local_storage_dir = os.path.join(tempfile.gettempdir(), ".oxys_storage")
+        
+        try:
+            os.makedirs(self._local_storage_dir, exist_ok=True)
+        except Exception:
+            pass
         self.connect()
 
     def connect(self) -> bool:
@@ -86,11 +101,14 @@ class MinIOStorageManager:
                 self._connected = False
 
         # Local storage fallback
-        local_path = os.path.join(self._local_storage_dir, self.quarantine_bucket, stream_name)
-        os.makedirs(local_path, exist_ok=True)
-        file_path = os.path.join(local_path, f"batch_{batch_id}.json")
-        with open(file_path, "wb") as f:
-            f.write(content_bytes)
+        try:
+            local_path = os.path.join(self._local_storage_dir, self.quarantine_bucket, stream_name)
+            os.makedirs(local_path, exist_ok=True)
+            file_path = os.path.join(local_path, f"batch_{batch_id}.json")
+            with open(file_path, "wb") as f:
+                f.write(content_bytes)
+        except Exception as e:
+            logger.warning(f"Could not persist local quarantine batch: {e}")
         return f"s3://{self.quarantine_bucket}/{object_name}"
 
     def save_checkpoint(self, stream_name: str, checkpoint_id: str, metadata: Dict[str, Any]) -> str:
@@ -110,11 +128,14 @@ class MinIOStorageManager:
             except Exception:
                 self._connected = False
 
-        local_path = os.path.join(self._local_storage_dir, self.checkpoint_bucket, "prod", stream_name)
-        os.makedirs(local_path, exist_ok=True)
-        file_path = os.path.join(local_path, f"{checkpoint_id}.chk")
-        with open(file_path, "wb") as f:
-            f.write(content_bytes)
+        try:
+            local_path = os.path.join(self._local_storage_dir, self.checkpoint_bucket, "prod", stream_name)
+            os.makedirs(local_path, exist_ok=True)
+            file_path = os.path.join(local_path, f"{checkpoint_id}.chk")
+            with open(file_path, "wb") as f:
+                f.write(content_bytes)
+        except Exception as e:
+            logger.warning(f"Could not persist local checkpoint: {e}")
         return f"s3://{self.checkpoint_bucket}/{object_name}"
 
 
