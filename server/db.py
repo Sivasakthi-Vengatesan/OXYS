@@ -112,6 +112,7 @@ class PipelineMetricRecord(Base):
 
 
 class DatabaseManager:
+    def __init__(self, db_url: Optional[str] = None):
         import tempfile
         is_serverless = bool(
             os.getenv("VERCEL") or 
