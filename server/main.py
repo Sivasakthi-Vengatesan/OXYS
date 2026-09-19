@@ -407,16 +407,29 @@ base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 @app.get("/")
 @app.get("/index.html")
 async def serve_index():
-    return FileResponse(os.path.join(base_dir, "index.html"))
+    index_file = os.path.join(base_dir, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return {"message": "OXYS API Online", "health": "/api/health", "docs": "/docs"}
 
 
 @app.get("/app")
 @app.get("/app.html")
 async def serve_app():
-    return FileResponse(os.path.join(base_dir, "app.html"))
+    app_file = os.path.join(base_dir, "app.html")
+    if os.path.exists(app_file):
+        return FileResponse(app_file)
+    return {"message": "OXYS App Online"}
 
 
-app.mount("/styles", StaticFiles(directory=os.path.join(base_dir, "styles")), name="styles")
-app.mount("/js", StaticFiles(directory=os.path.join(base_dir, "js")), name="js")
-if os.path.exists(os.path.join(base_dir, "assets")):
-    app.mount("/assets", StaticFiles(directory=os.path.join(base_dir, "assets")), name="assets")
+styles_dir = os.path.join(base_dir, "styles")
+if os.path.isdir(styles_dir):
+    app.mount("/styles", StaticFiles(directory=styles_dir), name="styles")
+
+js_dir = os.path.join(base_dir, "js")
+if os.path.isdir(js_dir):
+    app.mount("/js", StaticFiles(directory=js_dir), name="js")
+
+assets_dir = os.path.join(base_dir, "assets")
+if os.path.isdir(assets_dir):
+    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
