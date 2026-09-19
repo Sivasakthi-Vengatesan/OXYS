@@ -11,34 +11,6 @@
       "destination": "/api/index.py"
     },
     {
-      "source": "/health",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/metrics",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/events",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/anomalies",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/schema",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/quarantine",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/pipeline/(.*)",
-      "destination": "/api/index.py"
-    },
-    {
       "source": "/app",
       "destination": "/app.html"
     }

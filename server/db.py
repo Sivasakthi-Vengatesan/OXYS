@@ -137,9 +137,7 @@ class DatabaseManager:
         
         # Clean postgres scheme for SQLAlchemy
         if raw_url.startswith("postgres://"):
-            raw_url = raw_url.replace("postgres://", "postgresql+psycopg2://", 1)
-        elif raw_url.startswith("postgresql://") and "+psycopg2" not in raw_url:
-            raw_url = raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+            raw_url = raw_url.replace("postgres://", "postgresql://", 1)
 
         self.db_url = raw_url
         connect_args = {"check_same_thread": False} if self.db_url.startswith("sqlite") else {}

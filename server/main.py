@@ -23,19 +23,21 @@ from engine.processor import processor
 
 from contextlib import asynccontextmanager
 
+is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if not os.environ.get("VERCEL") and not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    if not is_serverless:
         engine.start_services()
     yield
-    if not os.environ.get("VERCEL") and not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    if not is_serverless:
         engine.stop_services()
 
 app = FastAPI(
     title="OXYS API",
     description="OXYS - Real-time integrity protection for streaming data.",
     version="2.0.0",
-    lifespan=lifespan
+    lifespan=None if is_serverless else lifespan
 )
 
 app.add_middleware(
