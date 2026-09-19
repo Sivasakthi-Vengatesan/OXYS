@@ -1,13 +1,36 @@
 {
   "version": 2,
-  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/(health|metrics|events|anomalies|schema|quarantine|pipeline/.*)",
+      "source": "/api/(.*)",
       "destination": "/api/index.py"
     },
     {
-      "source": "/api/(.*)",
+      "source": "/health",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/metrics",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/events",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/anomalies",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/schema",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/quarantine",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/pipeline/(.*)",
       "destination": "/api/index.py"
     },
     {
