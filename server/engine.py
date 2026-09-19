@@ -10,8 +10,6 @@ from typing import List, Dict, Any, Optional
 from engine.processor import processor
 from server.db import db
 from server.storage import storage
-from ingestion.service import ingestion_service
-from engine.spark_streaming import spark_runner
 
 
 class OxysEngine:
@@ -27,15 +25,19 @@ class OxysEngine:
             )
             if not is_serverless:
                 try:
+                    from ingestion.service import ingestion_service
+                    from engine.spark_streaming import spark_runner
                     ingestion_service.start()
                     spark_runner.start()
-                except Exception as e:
+                except Exception:
                     pass
             self._services_started = True
 
     def stop_services(self):
         if self._services_started:
             try:
+                from ingestion.service import ingestion_service
+                from engine.spark_streaming import spark_runner
                 ingestion_service.stop()
                 spark_runner.stop()
             except Exception:
