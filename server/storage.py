@@ -56,7 +56,8 @@ class MinIOStorageManager:
         except Exception:
             pass
 
-        self.connect()
+        if not is_serverless:
+            self.connect()
 
     def connect(self) -> bool:
         try:

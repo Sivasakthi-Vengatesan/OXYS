@@ -125,7 +125,16 @@ class DatabaseManager:
         if is_serverless:
             default_url = f"sqlite:///{os.path.join(tempfile.gettempdir(), 'oxys.db')}"
 
-        raw_url = db_url or os.getenv("DATABASE_URL", os.getenv("POSTGRES_URL", default_url))
+        db_url_env = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
+        # Only use postgres if psycopg2 is installed and not in serverless fallback
+        if db_url_env and ("postgres" in db_url_env) and not is_serverless:
+            try:
+                import psycopg2
+                raw_url = db_url_env
+            except ImportError:
+                raw_url = default_url
+        else:
+            raw_url = db_url or default_url
         
         # Clean postgres scheme for SQLAlchemy
         if raw_url.startswith("postgres://"):

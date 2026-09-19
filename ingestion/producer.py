@@ -32,6 +32,9 @@ class OxysKafkaProducer:
         self._in_memory_buffer: List[Dict[str, Any]] = []
 
     def connect(self) -> bool:
+        if bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("SERVERLESS")):
+            self._connected = False
+            return False
         try:
             import socket
             host, port = self.bootstrap_servers.split(",")[0].split(":")
