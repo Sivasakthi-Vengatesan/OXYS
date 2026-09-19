@@ -9,14 +9,30 @@ if root_dir not in sys.path:
 
 os.environ["VERCEL"] = "1"
 
-try:
-    from server.main import app
-except Exception as e:
-    from fastapi import FastAPI
-    from fastapi.responses import HTMLResponse
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 
+# Top-level FastAPI instance required by Vercel CLI static analyzer
+app = FastAPI(
+    title="OXYS API",
+    description="OXYS - Real-time integrity protection for streaming data.",
+    version="2.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+try:
+    from server.main import app as backend_app
+    app.mount("/", backend_app)
+except Exception as e:
     err_trace = traceback.format_exc()
-    app = FastAPI(title="OXYS Startup Diagnostic")
 
     @app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"])
     async def fallback_catchall(full_path: str = ""):
@@ -32,4 +48,5 @@ except Exception as e:
 </body>
 </html>"""
         )
+
 
