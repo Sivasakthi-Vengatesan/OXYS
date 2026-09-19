@@ -48,6 +48,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def diagnostic_error_middleware(request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as exc:
+        import traceback
+        tb = traceback.format_exc()
+        return HTMLResponse(
+            status_code=500,
+            content=f"<div style='font-family:monospace;padding:24px;background:#0d1117;color:#f85149;'><h2>OXYS Serverless Error</h2><pre>{tb}</pre></div>"
+        )
+
 
 # Active WebSocket connections
 connected_websockets: List[WebSocket] = []
