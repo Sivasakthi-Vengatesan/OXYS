@@ -261,8 +261,8 @@ stateDiagram-v2
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/Sivasakthi-Vengatesan/oxys.git
-cd oxys
+git clone https://github.com/Sivasakthi-Vengatesan/OXYS.git
+cd OXYS
 
 # 2. Create and activate virtual environment
 python -m venv venv
@@ -277,7 +277,10 @@ pip install -r requirements.txt
 # 4. Configure environment variables
 cp .env.example .env
 
-# 5. Start the local server
+# 5. Run test suite
+pytest
+
+# 6. Start the local server
 python -m uvicorn server.main:app --host 0.0.0.0 --port 8000
 ```
 
