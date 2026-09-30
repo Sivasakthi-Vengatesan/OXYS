@@ -422,7 +422,7 @@ Output trace:
 
 ## 11. Contributing
 
-1. Fork the repository (`https://github.com/Sivasakthi-Vengatesan/oxys`).
+1. Fork the repository (`https://github.com/Sivasakthi-Vengatesan/OXYS`).
 2. Create a feature branch (`git checkout -b feature/streaming-guard-custom`).
 3. Commit your changes with clear messages (`git commit -m 'feat: add streaming histogram drift guard'`).
 4. Ensure all tests pass (`python -m pytest tests/ -v`).
@@ -443,4 +443,4 @@ Output trace:
 
 ## 13. License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the [MIT License](LICENSE).
